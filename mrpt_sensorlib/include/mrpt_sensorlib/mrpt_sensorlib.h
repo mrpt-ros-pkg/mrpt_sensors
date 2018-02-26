@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <mrpt/version.h>
 #include <mrpt/hwdrivers/CGenericSensor.h>
-#if MRPT_VERSION>=0x199
+#if MRPT_VERSION >= 0x199
 #include <mrpt/io/CFileGZOutputStream.h>
 using mrpt::io::CFileGZOutputStream;
 #else
@@ -24,11 +24,11 @@ class GenericSensorNode
    protected:
 	ros::NodeHandle nh_{};
 	ros::NodeHandle nhlocal_{"~"};
-        std::string     nodename_{"mrpt_generic_sensor"};
-        std::string     cfgfilename_{"sensor.ini"}, cfg_section_{"SENSOR1"};
-        mrpt::hwdrivers::CGenericSensor::Ptr  sensor_;
-        std::string     out_rawlog_prefix_; //!< If non-empty, write to rawlog
-        CFileGZOutputStream out_rawlog_;
+	std::string cfgfilename_{"sensor.ini"}, cfg_section_{"SENSOR1"};
+	mrpt::hwdrivers::CGenericSensor::Ptr sensor_;
+	std::string out_rawlog_prefix_;  //!< If non-empty, write to rawlog
+	CFileGZOutputStream out_rawlog_;
+	int rawlog_GZ_compress_level_{1};
 
 	virtual void process_sensor_specific()
 	{ /*do nothing by default*/
@@ -42,7 +42,7 @@ class GenericSensorNode
 	virtual ~GenericSensorNode();
 
 	/** Load parameters and establish communication with the sensor */
-	virtual void init(int argc, char **argv);
+	virtual void init(int argc, char** argv);
 
 	/** Infinite loop for main(). */
 	void run();
