@@ -104,7 +104,11 @@ void GenericSensorNode::run()
 
 		if (out_rawlog_.is_open())
 		{
+#if MRPT_VERSION >= 0x199
 			auto out_arch = mrpt::serialization::archiveFrom(out_rawlog_);
+#else
+			auto& out_arch = out_rawlog_;
+#endif
 			for (const auto& o : lstObjs)
 			{
 				out_arch << *o.second;
