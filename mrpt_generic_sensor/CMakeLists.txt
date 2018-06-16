@@ -9,9 +9,9 @@ find_package(catkin REQUIRED COMPONENTS mrpt_sensorlib roscpp)
 
 find_package(MRPT REQUIRED hwdrivers)
 #message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
-IF(NOT MRPT_VERSION VERSION_LESS 1.9.9)
+if(NOT "${MRPT_VERSION}" VERSION_LESS "1.9.9")
 	set (CMAKE_CXX_STANDARD 14)
-ENDIF()
+endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
 	# High level of warnings.

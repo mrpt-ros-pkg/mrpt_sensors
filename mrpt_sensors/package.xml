@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrpt_sensors</name>
+  <version>0.0.1</version>
+  <description>
+    ROS nodes for various robotics sensors via mrpt-hwdrivers
+  </description>
+  <maintainer email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</maintainer>
+  <license>BSD</license>
+  <url>http://wiki.ros.org/mrpt_sensors</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>mrpt_generic_sensor</exec_depend>
+  <exec_depend>mrpt_sensorlib</exec_depend>
+  <export>
+    <metapackage/>
+  </export>
+</package>
