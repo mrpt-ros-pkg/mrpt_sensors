@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>mrpt_sensorlib</name>
   <version>0.0.1</version>
   <description>C++ library for the base generic MRPT sensor node</description>
@@ -10,36 +10,19 @@
   <license>BSD</license>
   <url type="website">http://wiki.ros.org/mrpt_sensors</url>
 
-  <!-- The *_depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
-  <build_depend>roscpp</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>mrpt_msgs</build_depend>
-  <build_depend>message_generation</build_depend>
-
-  <!-- Use buildtool_depend for build tool packages: -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- Use run_depend for packages you need at runtime: -->
-  <!--   <run_depend>message_runtime</run_depend> -->
-  <run_depend>roscpp</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>mrpt_msgs</run_depend>
-  <run_depend>message_runtime</run_depend>
+  <depend>mrpt1</depend>
+  <depend>roscpp</depend>
 
-  <build_depend>mrpt</build_depend> <!-- Depend on mrpt system pkgs -->
-  <run_depend>mrpt</run_depend> <!-- Depend on mrpt system pkgs -->
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>mrpt_msgs</depend>
+  <depend>message_generation</depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
+  <exec_depend>message_runtime</exec_depend>
+
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
   </export>
 </package>

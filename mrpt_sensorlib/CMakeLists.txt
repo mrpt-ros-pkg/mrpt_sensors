@@ -51,8 +51,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
 add_library(${PROJECT_NAME}
-	src/mrpt_sensorlib.cpp
-	include/mrpt_sensorlib/mrpt_sensorlib.h)
+	src/${PROJECT_NAME}.cpp
+	include/${PROJECT_NAME}/${PROJECT_NAME}.h)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
