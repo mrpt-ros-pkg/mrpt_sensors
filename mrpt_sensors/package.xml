@@ -7,7 +7,7 @@
   </description>
   <maintainer email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</maintainer>
   <license>BSD</license>
-  <url>http://wiki.ros.org/mrpt_sensors</url>
+  <url>https://wiki.ros.org/mrpt_sensors</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 
