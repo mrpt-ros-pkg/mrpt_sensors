@@ -13,7 +13,7 @@
   <!-- Use buildtool_depend for build tool packages: -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>mrpt1</depend>
+  <depend>mrpt2</depend>
   <depend>roscpp</depend>
   <depend>mrpt_sensorlib</depend>
 
