@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>mrpt_generic_sensor</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>ROS node for interfacing any sensor supported by mrpt-hwdrivers</description>
 
   <author email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</author>
