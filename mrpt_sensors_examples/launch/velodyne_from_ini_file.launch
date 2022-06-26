@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config_file" default="$(find mrpt_sensors_examples)/cfg/velodyne.ini" />
+  <arg name="config_section" default="Velodyne" />
+
+  <node pkg="mrpt_generic_sensor"
+        type="mrpt_generic_sensor_node"
+        name="mrpt_generic_sensor"
+        output="screen"
+        >
+    <param name="config_file" value="$(arg config_file)"/> 
+    <param name="config_section" value="$(arg config_section)"/> 
+  </node>
+  
+</launch>
+

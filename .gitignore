@@ -1,2 +1,4 @@
 /mrpt_generic_sensor/build/
 .vscode
+build*
+CMakeLists.txt.user*

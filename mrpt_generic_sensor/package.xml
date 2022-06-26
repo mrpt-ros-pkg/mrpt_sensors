@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>mrpt_generic_sensor</name>
   <version>0.0.2</version>
   <description>ROS node for interfacing any sensor supported by mrpt-hwdrivers</description>
@@ -10,12 +11,22 @@
   <license>BSD</license>
   <url type="website">https://wiki.ros.org/mrpt_sensors</url>
 
-  <!-- Use buildtool_depend for build tool packages: -->
-  <buildtool_depend>catkin</buildtool_depend>
+  <!-- COMMON DEPS -->
+  <build_depend>ros_environment</build_depend>
+
+  <!-- BUILD TOOLS -->
+  <buildtool_depend>cmake</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
 
   <depend>mrpt2</depend>
-  <depend>roscpp</depend>
   <depend>mrpt_sensorlib</depend>
+
+  <!-- ROS1 -->
+  <depend        condition="$ROS_VERSION == 1">roscpp</depend>
+
+  <!-- ROS2 -->
+  <depend        condition="$ROS_VERSION == 2">rclcpp</depend>
 
   <export>
   </export>

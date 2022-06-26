@@ -13,6 +13,7 @@
 
   <exec_depend>mrpt_generic_sensor</exec_depend>
   <exec_depend>mrpt_sensorlib</exec_depend>
+  <exec_depend>mrpt_sensors_examples</exec_depend>
   <export>
     <metapackage/>
   </export>

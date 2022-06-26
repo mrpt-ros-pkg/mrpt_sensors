@@ -1,18 +1,17 @@
+/* mrpt_sensorlib ROS package
+ *
+ * Copyright 2021-2022, Jose Luis Blanco Claraco
+ * License: BSD 3-Clause License
+ */
 
 #pragma once
 
 #include <ros/ros.h>
-#include <mrpt/version.h>
 #include <mrpt/hwdrivers/CGenericSensor.h>
-#if MRPT_VERSION >= 0x199
 #include <mrpt/io/CFileGZOutputStream.h>
-using mrpt::io::CFileGZOutputStream;
-#else
-#include <mrpt/utils/CFileGZOutputStream.h>
-using mrpt::utils::CFileGZOutputStream;
-#endif
+#include <optional>
 
-namespace mrpt_sensors
+namespace mrpt_sensorlib
 {
 /** Base class for all ROS nodes that interface an MRPT sensor.
  *  Provides the basic initialization of the sensor, parsing of incoming data,
@@ -21,14 +20,33 @@ namespace mrpt_sensors
  */
 class GenericSensorNode
 {
+   public:
+	GenericSensorNode();
+	virtual ~GenericSensorNode();
+
+	/** Load parameters and establish communication with the sensor */
+	virtual void init_from_config_file(int argc, char** argv);
+
+	virtual void init_from_template_and_parameters(int argc, char** argv);
+
+	/** Infinite loop for main(). */
+	void run();
+
    protected:
 	ros::NodeHandle nh_{};
 	ros::NodeHandle nhlocal_{"~"};
-	std::string cfgfilename_{"sensor.ini"}, cfg_section_{"SENSOR1"};
+
+	std::optional<std::string> cfgfilename_;
+	std::shared_ptr<mrpt::config::CConfigFileBase> cfgfile_;
+	std::string cfg_section_{"SENSOR1"};
+
 	mrpt::hwdrivers::CGenericSensor::Ptr sensor_;
-	std::string out_rawlog_prefix_;  //!< If non-empty, write to rawlog
-	CFileGZOutputStream out_rawlog_;
+	std::string out_rawlog_prefix_;	 //!< If non-empty, write to rawlog
+	mrpt::io::CFileGZOutputStream out_rawlog_;
 	int rawlog_GZ_compress_level_{1};
+
+	/** Uses cfgfile_ and cfg_section_ */
+	virtual void internal_init();
 
 	virtual void process_sensor_specific()
 	{ /*do nothing by default*/
@@ -36,16 +54,6 @@ class GenericSensorNode
 	virtual void init_sensor_specific()
 	{ /*do nothing by default*/
 	}
-
-   public:
-	GenericSensorNode();
-	virtual ~GenericSensorNode();
-
-	/** Load parameters and establish communication with the sensor */
-	virtual void init(int argc, char** argv);
-
-	/** Infinite loop for main(). */
-	void run();
 };
 
-}  // namespace mrpt_sensors
+}  // namespace mrpt_sensorlib
