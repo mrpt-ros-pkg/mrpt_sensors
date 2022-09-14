@@ -54,6 +54,9 @@ class GenericSensorNode
 	virtual void init_sensor_specific()
 	{ /*do nothing by default*/
 	}
+
+	/** Process each observation and publish it to ROS topic */
+	virtual void on_observation(const mrpt::obs::CObservation::Ptr& o);
 };
 
 }  // namespace mrpt_sensorlib

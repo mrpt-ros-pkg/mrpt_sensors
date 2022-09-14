@@ -170,6 +170,8 @@ void GenericSensorNode::run()
 		CGenericSensor::TListObservations lstObjs;
 		sensor_->getObservations(lstObjs);
 
+		for (const auto& o : lstObjs) on_observation(o);
+
 		if (out_rawlog_.is_open())
 		{
 			auto out_arch = mrpt::serialization::archiveFrom(out_rawlog_);
@@ -181,4 +183,10 @@ void GenericSensorNode::run()
 
 		ros::spinOnce();
 	}
+}
+
+void GenericSensorNode::on_observation(const mrpt::obs::CObservation::Ptr& o)
+{
+	ASSERT_(o);
+	ROS_INFO("Received obs: %s", o->sensorLabel.c_str());
 }
