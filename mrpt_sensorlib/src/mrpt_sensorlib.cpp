@@ -11,6 +11,11 @@
 #include <mrpt/config/CConfigFileMemory.h>
 #include <mrpt/io/vector_loadsave.h>  // file_get_contents()
 
+#include <mrpt/ros1bridge/point_cloud2.h>
+#include <mrpt/ros1bridge/time.h>
+#include <mrpt/obs/CObservationVelodyneScan.h>
+#include <mrpt/maps/CSimplePointsMap.h>
+
 using namespace mrpt::hwdrivers;
 using namespace mrpt_sensorlib;
 using mrpt::config::CConfigFile;
@@ -170,7 +175,14 @@ void GenericSensorNode::run()
 		CGenericSensor::TListObservations lstObjs;
 		sensor_->getObservations(lstObjs);
 
-		for (const auto& o : lstObjs) on_observation(o);
+		for (const auto& o : lstObjs)
+		{
+			if (const auto& obs =
+					std::dynamic_pointer_cast<mrpt::obs::CObservation>(
+						o.second);
+				obs)
+				on_observation(obs);
+		}
 
 		if (out_rawlog_.is_open())
 		{
@@ -188,5 +200,56 @@ void GenericSensorNode::run()
 void GenericSensorNode::on_observation(const mrpt::obs::CObservation::Ptr& o)
 {
 	ASSERT_(o);
-	ROS_INFO("Received obs: %s", o->sensorLabel.c_str());
+
+	if (const auto& obsVel =
+			std::dynamic_pointer_cast<mrpt::obs::CObservationVelodyneScan>(o);
+		obsVel)
+	{
+		on_observation_velodyne(*obsVel);
+	}
+	else
+	{
+		ROS_WARN(
+			"Do not know how to publish observation '%s' of type '%s'",
+			o->sensorLabel.c_str(), o->GetRuntimeClass()->className);
+	}
+}
+
+void GenericSensorNode::on_observation_velodyne(
+	const mrpt::obs::CObservationVelodyneScan& o)
+{
+	thread_local std::map<std::string, ros::Publisher> publishers;
+
+	ROS_DEBUG("Received velodyne obs: %s", o.sensorLabel.c_str());
+
+	// Create publisher on first use:
+	if (publishers.count(o.sensorLabel) == 0)
+	{
+		publishers[o.sensorLabel] =
+			nh_.advertise<sensor_msgs::PointCloud2>(o.sensorLabel, 20);
+	}
+
+	auto& pub = publishers[o.sensorLabel];
+
+	if (o.point_cloud.size() == 0)
+	{
+		mrpt::obs::CObservationVelodyneScan::TGeneratePointCloudParameters p;
+		p.minDistance = 0.2;
+
+		const_cast<mrpt::obs::CObservationVelodyneScan&>(o)
+			.generatePointCloud();
+	}
+
+	mrpt::maps::CSimplePointsMap pts;
+	pts.loadFromVelodyneScan(o);
+
+	std_msgs::Header hdr;
+	hdr.frame_id = "base_link";
+	hdr.stamp = mrpt::ros1bridge::toROS(o.timestamp);
+
+	sensor_msgs::PointCloud2 velodyneCloud;
+	bool ok = mrpt::ros1bridge::toROS(pts, hdr, velodyneCloud);
+	ASSERT_(ok);
+
+	pub.publish(velodyneCloud);
 }

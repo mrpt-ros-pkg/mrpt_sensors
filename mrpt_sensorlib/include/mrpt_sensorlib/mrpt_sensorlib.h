@@ -10,6 +10,7 @@
 #include <mrpt/hwdrivers/CGenericSensor.h>
 #include <mrpt/io/CFileGZOutputStream.h>
 #include <optional>
+#include <mrpt/obs/obs_frwds.h>
 
 namespace mrpt_sensorlib
 {
@@ -57,6 +58,9 @@ class GenericSensorNode
 
 	/** Process each observation and publish it to ROS topic */
 	virtual void on_observation(const mrpt::obs::CObservation::Ptr& o);
+
+	virtual void on_observation_velodyne(
+		const mrpt::obs::CObservationVelodyneScan& o);
 };
 
 }  // namespace mrpt_sensorlib
