@@ -172,8 +172,7 @@ void GenericSensorNode::run()
 		sensor_->doProcess();
 
 		// Get new observations
-		CGenericSensor::TListObservations lstObjs;
-		sensor_->getObservations(lstObjs);
+		CGenericSensor::TListObservations lstObjs = sensor_->getObservations();
 
 		for (const auto& o : lstObjs)
 		{
