@@ -2,6 +2,12 @@
 Changelog for package mrpt_tutorials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix wrong changelog
+* towards templatized specific sensor nodes
+* Contributors: Jose Luis Blanco Claraco
+
 0.0.2 (2022-06-24)
 ------------------
 * New package
