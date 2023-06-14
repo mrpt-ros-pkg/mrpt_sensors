@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2023-06-14)
+------------------
 * Fix build errors with latest mrpt versions
 * Implement publisher for velodyne sensor
 * start publish ros
