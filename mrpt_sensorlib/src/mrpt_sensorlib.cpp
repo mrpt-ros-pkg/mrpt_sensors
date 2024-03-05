@@ -1,31 +1,32 @@
+/* +------------------------------------------------------------------------+
+   |                             mrpt_sensors                               |
+   |                                                                        |
+   | Copyright (c) 2017-2024, Individual contributors, see commit authors   |
+   | See: https://github.com/mrpt-ros-pkg/mrpt_sensors                      |
+   | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
+   +------------------------------------------------------------------------+ */
 
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
-
-#include <mrpt/system/filesystem.h>
-#if MRPT_VERSION >= 0x199
-#include <mrpt/serialization/CArchive.h>
 #include <mrpt/config/CConfigFile.h>
-using mrpt::config::CConfigFile;
-#else
-#include <mrpt/utils/CConfigFile.h>
-using mrpt::utils::CConfigFile;
-#endif
+#include <mrpt/system/filesystem.h>
 
 using namespace mrpt::hwdrivers;
 using namespace mrpt_sensors;
 
-GenericSensorNode::GenericSensorNode() {}
+GenericSensorNode::GenericSensorNode() : Node("generic_sensor_node") {}
 
 GenericSensorNode::~GenericSensorNode() {}
 
-void GenericSensorNode::init(int argc, char** argv)
+void GenericSensorNode::init()
 {
 	try
 	{
 		// Load parameters:
-		nhlocal_.getParam("config_file", cfgfilename_);
-		nhlocal_.getParam("config_section", cfg_section_);
-		CConfigFile iniFile(cfgfilename_);
+		this->declare_parameter("config_file", cfgfilename_);
+		this->declare_parameter("config_section", cfg_section_);
+		cfgfilename_ = this->get_parameter("config_file").as_string();
+		cfg_section_ = this->get_parameter("config_section").as_string();
+		mrpt::config::CConfigFile iniFile(cfgfilename_);
 
 		// Call sensor factory:
 		std::string driver_name =
@@ -33,12 +34,13 @@ void GenericSensorNode::init(int argc, char** argv)
 		sensor_ = mrpt::hwdrivers::CGenericSensor::createSensorPtr(driver_name);
 		if (!sensor_)
 		{
-			ROS_ERROR_STREAM(
+			RCLCPP_ERROR_STREAM(
+				this->get_logger(),
 				"Sensor class name not recognized: " << driver_name);
 			return;
 		}
 
-		// Load common & sensor specific parameters:
+		// Load common & sensor-specific parameters:
 		sensor_->loadConfig(iniFile, cfg_section_);
 
 		// Initialize sensor:
@@ -51,10 +53,7 @@ void GenericSensorNode::init(int argc, char** argv)
 		if (!out_rawlog_prefix_.empty())
 		{
 			// Build full rawlog file name:
-
 			std::string rawlog_postfix = "_";
-
-			// rawlog_postfix += dateTimeToString( now() );
 			mrpt::system::TTimeParts parts;
 			mrpt::system::timestampToParts(mrpt::system::now(), parts, true);
 			rawlog_postfix += mrpt::format(
@@ -68,53 +67,50 @@ void GenericSensorNode::init(int argc, char** argv)
 
 			const std::string fil = out_rawlog_prefix_ + rawlog_postfix;
 			// auto out_arch = archiveFrom(out_rawlog_);
-			ROS_INFO("Writing rawlog to file: `%s`", fil.c_str());
-
-			out_rawlog_.open(fil, rawlog_GZ_compress_level_);
-
-			if (!out_rawlog_.is_open())
-				ROS_ERROR("Error opening output rawlog for writing");
+			RCLCPP_INFO(
+				this->get_logger(), "Writing rawlog to file: `%s`",
+				fil.c_str());
 		}
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
-		ROS_ERROR_STREAM(
+		RCLCPP_ERROR_STREAM(
+			this->get_logger(),
 			"Exception in GenericSensorNode::init(): " << e.what());
 		return;
 	}
 }
 
-/** Infinite loop for main(). */
 void GenericSensorNode::run()
 {
-	ROS_INFO("Starting run() at %.02f Hz", sensor_->getProcessRate());
+	RCLCPP_INFO(
+		this->get_logger(), "Starting run() at %.02f Hz",
+		sensor_->getProcessRate());
 	if (!sensor_)
 	{
-		ROS_ERROR("Aborting: sensor object was not properly initialized.");
+		RCLCPP_ERROR(
+			this->get_logger(),
+			"Aborting: sensor object was not properly initialized.");
 		return;
 	}
-	ros::Rate loop_rate(sensor_->getProcessRate());
-	while (ros::ok())
+	rclcpp::Rate loop_rate(sensor_->getProcessRate());
+	while (rclcpp::ok())
 	{
 		sensor_->doProcess();
 
 		// Get new observations
-		CGenericSensor::TListObservations lstObjs;
-		sensor_->getObservations(lstObjs);
+		const CGenericSensor::TListObservations lstObjs =
+			sensor_->getObservations();
 
-		if (out_rawlog_.is_open())
+		if (!lstObjs.empty())
 		{
-#if MRPT_VERSION >= 0x199
-			auto out_arch = mrpt::serialization::archiveFrom(out_rawlog_);
-#else
-			auto& out_arch = out_rawlog_;
-#endif
-			for (const auto& o : lstObjs)
-			{
-				out_arch << *o.second;
-			}
+			MRPT_TODO("Continue here!");
+			// Assuming imu_publisher_ is a sensor_msgs::msg::Imu publisher
+			auto imu_msg = sensor_msgs::msg::Imu();
+			imu_publisher_->publish(imu_msg);
 		}
 
-		ros::spinOnce();
+		rclcpp::spin_some(this->get_node_base_interface());
+		loop_rate.sleep();
 	}
 }

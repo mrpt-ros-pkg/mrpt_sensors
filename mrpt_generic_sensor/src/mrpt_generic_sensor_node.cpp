@@ -1,6 +1,12 @@
+/* +------------------------------------------------------------------------+
+   |                             mrpt_sensors                               |
+   |                                                                        |
+   | Copyright (c) 2017-2024, Individual contributors, see commit authors   |
+   | See: https://github.com/mrpt-ros-pkg/mrpt_sensors                      |
+   | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
+   +------------------------------------------------------------------------+ */
 
-#include <ros/ros.h>
-#include <ros/console.h>
+#include <rclcpp/rclcpp.hpp>
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
 
 int main(int argc, char** argv)
@@ -8,21 +14,22 @@ int main(int argc, char** argv)
 	try
 	{
 		// Init ROS:
-		ros::init(argc, argv, "mrpt_generic_sensor");
+		rclcpp::init(argc, argv);
 
-		ROS_INFO("About to init GenericSensorNode...");
-		mrpt_sensors::GenericSensorNode node;
+		auto node = std::make_shared<mrpt_sensors::GenericSensorNode>();
+		RCLCPP_INFO(
+			node->get_logger(), "About to init MrptGenericSensorNode...");
+		node->init();
+		RCLCPP_INFO(node->get_logger(), "Calling MrptGenericSensorNode::run()");
+		node->run();
 
-		ROS_INFO("Calling GenericSensorNode::init()");
-		node.init(argc, argv);
-		ROS_INFO("Calling GenericSensorNode::run()");
-		node.run();
-
+		rclcpp::shutdown();
 		return 0;
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
-		ROS_ERROR_STREAM(
+		RCLCPP_ERROR_STREAM(
+			rclcpp::get_logger(""),
 			"Exception in mrpt_generic_sensor main(): " << e.what());
 		return 1;
 	}

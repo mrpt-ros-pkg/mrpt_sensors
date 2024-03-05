@@ -1,2 +1,3 @@
-/mrpt_generic_sensor/build/
-/mrpt_sensorlib/build/
+build*
+.vscode
+CMakeLists.txt.*

@@ -4,25 +4,23 @@
   <version>0.0.1</version>
   <description>C++ library for the base generic MRPT sensor node</description>
 
-  <author email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</author>
-  <maintainer email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</maintainer>
-
+  <url type="website">https://github.com/mrpt-ros-pkg/mrpt_sensors</url>
+  <maintainer email="joseluisblancoc@gmail.com">José Luis Blanco-Claraco</maintainer>
+  <author>José Luis Blanco-Claraco</author>
   <license>BSD</license>
-  <url type="website">https://wiki.ros.org/mrpt_sensors</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>ros_environment</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>mrpt2</depend>
-  <depend>roscpp</depend>
 
-  <depend>std_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>mrpt_msgs</depend>
-  <depend>message_generation</depend>
+  <!-- <depend>geometry_msgs</depend> -->
 
-  <exec_depend>message_runtime</exec_depend>
+  <depend>ament_lint_common</depend>
+  <depend>ament_lint_auto</depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
+
 </package>

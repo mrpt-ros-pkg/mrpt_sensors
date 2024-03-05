@@ -1,19 +1,24 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>mrpt_sensors</name>
   <version>0.0.1</version>
-  <description>
-    ROS nodes for various robotics sensors via mrpt-hwdrivers
-  </description>
+  <description>ROS nodes for various robotics sensors via mrpt-hwdrivers. Metapackage for all mrpt_sensor packages.</description>
   <maintainer email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</maintainer>
+  <author>Jose-Luis Blanco-Claraco</author>
   <license>BSD</license>
-  <url>https://wiki.ros.org/mrpt_sensors</url>
+  <url>https://github.com/mrpt-ros-pkg/mrpt_sensors/</url>
+  
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <depend>mrpt_sensorlib</depend>
+  <depend>mrpt_generic_sensor</depend>
 
-  <exec_depend>mrpt_generic_sensor</exec_depend>
-  <exec_depend>mrpt_sensorlib</exec_depend>
+
+  <depend>ament_lint_common</depend>
+  <depend>ament_lint_auto</depend>
+
   <export>
-    <metapackage/>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
