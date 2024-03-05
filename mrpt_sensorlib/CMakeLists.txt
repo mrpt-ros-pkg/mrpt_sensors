@@ -20,6 +20,12 @@ add_library(${PROJECT_NAME}
   src/mrpt_sensorlib.cpp
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:include>
+	PRIVATE src
+)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
   mrpt::hwdrivers
