@@ -5,6 +5,12 @@ project(mrpt_sensors)
 # Find dependencies
 find_package(ament_cmake REQUIRED)
 
+install(DIRECTORY
+  launch
+  ini
+  DESTINATION share/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
