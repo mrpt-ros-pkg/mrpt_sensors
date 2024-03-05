@@ -6,3 +6,34 @@
 
 # mrpt_sensors
 ROS nodes for various robotics sensors via mrpt-hwdrivers
+
+# Usage
+
+## Velodyne
+Supported models: `VLP16`,`HDL32`,`HDL64`
+
+```bash
+ros2 launch mrpt_sensors velodyne.launch.py
+```
+
+TODO: Document and explain parameters.
+
+## NMEA GNNS
+Supported models: any GPS/GNNS sensor emiting NMEA messages via a serial/USB port.
+
+```bash
+ros2 launch mrpt_sensors nmea_gnns.launch.py
+```
+
+Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/reference/latest/class_mrpt_hwdrivers_CGPSInterface.html)):
+- NMEA_GGA
+- NMEA_GLL
+- NMEA_GSA
+- NMEA_GSV
+- NMEA_MSS
+- NMEA_RMC
+- NMEA_VTG
+- NMEA_ZDA
+
+TODO: Document and explain parameters.
+
