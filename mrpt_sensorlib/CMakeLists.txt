@@ -18,6 +18,7 @@ message(STATUS "MRPT_VERSION: ${mrpt-hwdrivers_VERSION}")
 # Declare a cpp library
 add_library(${PROJECT_NAME}
   src/mrpt_sensorlib.cpp
+  include/mrpt_sensorlib/mrpt_sensorlib.h
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

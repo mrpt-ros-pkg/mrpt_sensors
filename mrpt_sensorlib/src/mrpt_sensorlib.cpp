@@ -10,6 +10,8 @@
 #include <mrpt/config/CConfigFile.h>
 #include <mrpt/system/filesystem.h>
 
+#include <mrpt/obs/CObservationGPS.h>
+
 using namespace mrpt::hwdrivers;
 using namespace mrpt_sensors;
 
@@ -102,15 +104,48 @@ void GenericSensorNode::run()
 		const CGenericSensor::TListObservations lstObjs =
 			sensor_->getObservations();
 
-		if (!lstObjs.empty())
+		for (const auto& [t, obj] : lstObjs)
 		{
-			MRPT_TODO("Continue here!");
-			// Assuming imu_publisher_ is a sensor_msgs::msg::Imu publisher
-			auto imu_msg = sensor_msgs::msg::Imu();
-			imu_publisher_->publish(imu_msg);
+			auto obs = std::dynamic_pointer_cast<mrpt::obs::CObservation>(obj);
+			ASSERT_(obs);
+			process_observation(obs);
 		}
 
 		rclcpp::spin_some(this->get_node_base_interface());
 		loop_rate.sleep();
 	}
+}
+
+void GenericSensorNode::process_observation(
+	const mrpt::obs::CObservation::Ptr& o)
+{
+	if (auto oGPS = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(o);
+		oGPS)
+	{
+		process(*oGPS);
+	}
+}
+
+void GenericSensorNode::process(const mrpt::obs::CObservationGPS& o)
+{
+	if (!gps_publisher_)
+	{
+		gps_publisher_ =
+			this->create_publisher<sensor_msgs::msg::NavSatFix>("/gps", 1);
+	}
+
+	MRPT_TODO("continue here!");
+
+	auto msg = sensor_msgs::msg::NavSatFix();
+	msg.header.frame_id = "base_link";
+	msg.header.stamp = this->get_clock()->now();
+
+	auto d = o.getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GGA>();
+	if (!d) return;
+
+	msg.latitude = d->fields.latitude_degrees;
+	msg.longitude = d->fields.longitude_degrees;
+	msg.altitude = d->fields.altitude_meters;
+
+	gps_publisher_->publish(msg);
 }
