@@ -12,6 +12,12 @@
 
 #include <mrpt/obs/CObservationGPS.h>
 
+// MRPT -> ROS bridge:
+#include <mrpt/ros2bridge/gps.h>
+#include <mrpt/ros2bridge/point_cloud2.h>
+#include <mrpt/ros2bridge/image.h>
+#include <mrpt/ros2bridge/time.h>
+
 using namespace mrpt::hwdrivers;
 using namespace mrpt_sensors;
 
@@ -134,18 +140,13 @@ void GenericSensorNode::process(const mrpt::obs::CObservationGPS& o)
 			this->create_publisher<sensor_msgs::msg::NavSatFix>("/gps", 1);
 	}
 
-	MRPT_TODO("continue here!");
+	auto header = std_msgs::msg::Header();
+	header.frame_id = "base_link";
+	header.stamp = mrpt::ros2bridge::toROS(o.timestamp);
 
 	auto msg = sensor_msgs::msg::NavSatFix();
-	msg.header.frame_id = "base_link";
-	msg.header.stamp = this->get_clock()->now();
-
-	auto d = o.getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GGA>();
-	if (!d) return;
-
-	msg.latitude = d->fields.latitude_degrees;
-	msg.longitude = d->fields.longitude_degrees;
-	msg.altitude = d->fields.altitude_meters;
+	bool valid = mrpt::ros2bridge::toROS(o, header, msg);
+	if (!valid) return;
 
 	gps_publisher_->publish(msg);
 }
