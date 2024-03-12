@@ -7,22 +7,27 @@
 # mrpt_sensors
 ROS nodes for various robotics sensors via mrpt-hwdrivers
 
+<!-- Generated with: markdown-toc  -->
+
+<!-- toc -->
+
+- [Usage](#usage)
+  * [NMEA GNNS](#nmea-gnns)
+    + [Usage](#usage-1)
+    + [Launch arguments](#launch-arguments)
+  * [Velodyne](#velodyne)
+
+<!-- tocstop -->
+
 # Usage
 
-## Velodyne
-Supported models: `VLP16`,`HDL32`,`HDL64`
-
-```bash
-ros2 launch mrpt_sensors velodyne.launch.py
-```
-
-TODO: Document and explain parameters.
-
 ## NMEA GNNS
+
+### Usage
 Supported models: any GPS/GNNS sensor emiting NMEA messages via a serial/USB port.
 
 ```bash
-ros2 launch mrpt_sensors nmea_gnns.launch.py
+ros2 launch mrpt_sensor_gnns_nmea mrpt_sensor_gnns_nmea.launch.py serial_port:=/dev/ttyACM0 publish_topic:="/gps"
 ```
 
 Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/reference/latest/class_mrpt_hwdrivers_CGPSInterface.html)):
@@ -35,5 +40,62 @@ Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/refe
 - NMEA_VTG
 - NMEA_ZDA
 
-TODO: Document and explain parameters.
+### Launch arguments
 
+```yaml
+ros2 launch mrpt_sensor_gnns_nmea mrpt_sensor_gnns_nmea.launch.py --show-args
+Arguments (pass arguments as '<name>:=<value>'):
+
+    'process_rate':
+        Rate (Hz) for the process() main sensor loop.
+        (default: '"50"')
+
+    'out_rawlog_prefix':
+        If not empty, a .rawlog file will be created with all recorded data, apart of publishing it as ROS messages.
+        (default: '')
+
+    'publish_mrpt_obs_topic':
+        If not empty, mrpt_msgs/GenericObservation messages will be published to this topic name with the binary serialization of mrtp::obs::CObservation objects from the sensor.
+        (default: '')
+
+    'publish_topic':
+        If not empty, messages of the appropriate type will be published to this topic for each sensor observation.
+        (default: 'sensor')
+
+    'sensor_frame_id':
+        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        (default: 'sensor')
+
+    'serial_port':
+        Serial port to open
+        (default: '')
+
+    'serial_baud_rate':
+        Serial port baud rate (typ: 4800, 9600, etc.)
+        (default: '"4800"')
+
+    'sensor_pose_x':
+        Sensor pose coordinate on the vehicle frame.
+        (default: '"0.0"')
+
+    'sensor_pose_y':
+        Sensor pose coordinate on the vehicle frame.
+        (default: '"0.0"')
+
+    'sensor_pose_z':
+        Sensor pose coordinate on the vehicle frame.
+        (default: '"0.0"')
+
+    'log_level':
+        Logging level
+        (default: 'INFO')
+```
+
+## Velodyne
+Supported models: `VLP16`,`HDL32`,`HDL64`
+
+```bash
+ros2 launch mrpt_sensors velodyne.launch.py
+```
+
+TODO: Document and explain parameters.

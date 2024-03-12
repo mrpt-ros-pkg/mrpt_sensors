@@ -16,6 +16,8 @@
 #include <mrpt/obs/obs_frwds.h>
 #include <mrpt_msgs/msg/generic_observation.hpp>
 
+#include <functional>
+
 namespace mrpt_sensors
 {
 class GenericSensorNode : public rclcpp::Node
@@ -48,6 +50,34 @@ class GenericSensorNode : public rclcpp::Node
 
 	void run();
 
+	/// Once the observation is published as MRPT CObservation (if enabled),
+	/// it will be published as a ROS message by process_observation(), unless
+	/// a derived class implements this to handle it in a particular way.
+	std::function<void(const mrpt::obs::CObservation::Ptr&)>
+		custom_process_sensor;
+
+	std::function<void()> init_sensor_specific;
+
+	// Public members and variables for easy access from functors in
+	// sensor-specific nodes
+	template <class MSG_T, class PUB_T>
+	void ensure_publisher_exists(PUB_T& pub)
+	{
+		if (!pub)
+		{
+			pub = this->create_publisher<MSG_T>(publish_topic_, 1);
+
+			RCLCPP_INFO_STREAM(
+				this->get_logger(),
+				"Created publisher for topic: " << publish_topic_);
+		}
+	}
+
+	std_msgs::msg::Header create_header(const mrpt::obs::CObservation& o);
+
+	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
+	rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
+
    private:
 	// ----------------- ROS 2 params -----------------
 	std::string out_rawlog_prefix_;
@@ -61,17 +91,6 @@ class GenericSensorNode : public rclcpp::Node
 
 	rclcpp::Publisher<mrpt_msgs::msg::GenericObservation>::SharedPtr
 		obs_publisher_;
-
-	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
-	rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
-
-	virtual void process_sensor_specific()
-	{ /*do nothing by default*/
-	}
-
-	virtual void init_sensor_specific()
-	{ /*do nothing by default*/
-	}
 
 	void process_observation(const mrpt::obs::CObservation::Ptr& o);
 

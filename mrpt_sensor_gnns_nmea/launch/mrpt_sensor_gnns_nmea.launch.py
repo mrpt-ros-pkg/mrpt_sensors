@@ -1,19 +1,24 @@
 # Importing necessary libraries
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
+from launch.actions import GroupAction
+from launch_ros.actions import PushRosNamespace
+from launch.conditions import IfCondition
 import os
 
 
 def generate_launch_description():
-    return LaunchDescription([
+    namespace = 'gnss'
+
+    ld = LaunchDescription([
         # COMMON PARAMS TO ALL MRPT_SENSOR NODES:
         # --------------------------------------------
         # Declare an argument for the config file
         DeclareLaunchArgument(
             'process_rate',
-            default_value='"100"',
+            default_value='"50"',
             description='Rate (Hz) for the process() main sensor loop.'
         ),
 
@@ -71,12 +76,20 @@ def generate_launch_description():
             description='Sensor pose coordinate on the vehicle frame.'
         ),
 
+        DeclareLaunchArgument(
+            "log_level",
+            default_value=TextSubstitution(text=str("INFO")),
+            description="Logging level"
+        ),
+
         # Node to launch the mrpt_generic_sensor_node
         Node(
             package='mrpt_sensor_gnns_nmea',
             executable='mrpt_sensor_gnns_nmea_node',
             name='mrpt_sensor_gnns_nmea',
             output='screen',
+            arguments=['--ros-args', '--log-level',
+                       LaunchConfiguration('log_level')],
             parameters=[
                 # ------------------------------------------------
                 # common params:
@@ -101,3 +114,12 @@ def generate_launch_description():
             ]
         )
     ])
+
+    # Namespace to avoid clash launch argument names with the parent scope:
+    return LaunchDescription([GroupAction(
+        actions=[
+            PushRosNamespace(
+                # condition=IfCondition(use_namespace),
+                namespace=namespace),
+            ld
+        ])])

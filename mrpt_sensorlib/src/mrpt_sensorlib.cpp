@@ -148,7 +148,7 @@ void GenericSensorNode::init(
 		sensor_->initialize();
 
 		// Custom init:
-		this->init_sensor_specific();
+		if (init_sensor_specific) init_sensor_specific();
 
 		// Open rawlog file, if enabled:
 		if (!out_rawlog_prefix_.empty())
@@ -239,6 +239,13 @@ void GenericSensorNode::process_observation(
 		obs_publisher_->publish(msg);
 	}
 
+	// custom handling?
+	if (custom_process_sensor)
+	{
+		custom_process_sensor(o);
+		return;
+	}
+
 	// specific ROS messages:
 	if (auto oGPS = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(o);
 		oGPS)
@@ -247,25 +254,26 @@ void GenericSensorNode::process_observation(
 	}
 }
 
-void GenericSensorNode::process(const mrpt::obs::CObservationGPS& o)
+std_msgs::msg::Header GenericSensorNode::create_header(
+	const mrpt::obs::CObservation& o)
 {
-	if (!gps_publisher_)
-	{
-		gps_publisher_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(
-			publish_topic_, 1);
-
-		RCLCPP_INFO_STREAM(
-			this->get_logger(),
-			"Created publisher for topic: " << publish_topic_);
-	}
-
-	std::stringstream ss;
-	o.getDescriptionAsText(ss);
-	RCLCPP_INFO_STREAM(this->get_logger(), ss.str());
-
-	auto header = std_msgs::msg::Header();
+	std_msgs::msg::Header header;
 	header.frame_id = sensor_frame_id_;
 	header.stamp = mrpt::ros2bridge::toROS(o.timestamp);
+	return header;
+}
+
+void GenericSensorNode::process(const mrpt::obs::CObservationGPS& o)
+{
+	ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(gps_publisher_);
+
+#if 0
+	std::stringstream ss;
+	o.getDescriptionAsText(ss);
+	RCLCPP_DEBUG_STREAM(this->get_logger(), ss.str());
+#endif
+
+	auto header = create_header(o);
 
 	auto msg = sensor_msgs::msg::NavSatFix();
 	bool valid = mrpt::ros2bridge::toROS(o, header, msg);
