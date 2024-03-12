@@ -3,9 +3,7 @@ project(mrpt_sensorlib)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-
-#find_package(geometry_msgs REQUIRED)
-
+find_package(mrpt_msgs REQUIRED)
 find_package(mrpt-ros2bridge REQUIRED)
 find_package(mrpt-hwdrivers REQUIRED)
 
@@ -52,6 +50,9 @@ install(DIRECTORY include/${PROJECT_NAME}
 #############
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
+  mrpt-ros2bridge
+  mrpt-hwdrivers
+  mrpt_msgs
 #  tf2
 )
 

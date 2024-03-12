@@ -13,6 +13,7 @@
 
   <depend>mrpt_sensorlib</depend>
   <depend>mrpt_generic_sensor</depend>
+  <depend>mrpt_sensor_gnns_nmea</depend>
 
 
   <depend>ament_lint_common</depend>
