@@ -1,4 +1,5 @@
 | Distro | Build dev | Build release | Stable release |
+
 | --- | --- | --- | --- |
 | ROS2 Humble (u22.04) | [![Build Status](https://build.ros2.org/job/Hdev__mrpt_sensors__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Hdev__mrpt_sensors__ubuntu_jammy_amd64/) |  xxx | xxx |
 | ROS2 Iron (u22.04) | [![Build Status](https://build.ros2.org/job/Idev__mrpt_sensors__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Idev__mrpt_sensors__ubuntu_jammy_amd64/) |  xxx | xxx |
@@ -7,23 +8,18 @@
 # mrpt_sensors
 ROS nodes for various robotics sensors via mrpt-hwdrivers
 
-<!-- Generated with: markdown-toc  -->
-
 <!-- toc -->
 
-- [Usage](#usage)
-  * [NMEA GNNS](#nmea-gnns)
-    + [Usage](#usage-1)
-    + [Launch arguments](#launch-arguments)
-  * [Velodyne](#velodyne)
+- [`mrpt_sensor_gnns_nmea`](#mrpt_sensor_gnns_nmea)
+  * [Usage](#usage)
+  * [Launch arguments](#launch-arguments)
+- [`mrpt_sensor_velodyne`](#mrpt_sensor_velodyne)
 
 <!-- tocstop -->
 
-# Usage
+# `mrpt_sensor_gnns_nmea`
 
-## NMEA GNNS
-
-### Usage
+## Usage
 Supported models: any GPS/GNNS sensor emiting NMEA messages via a serial/USB port.
 
 ```bash
@@ -40,7 +36,7 @@ Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/refe
 - NMEA_VTG
 - NMEA_ZDA
 
-### Launch arguments
+## Launch arguments
 
 ```yaml
 ros2 launch mrpt_sensor_gnns_nmea mrpt_sensor_gnns_nmea.launch.py --show-args
@@ -91,7 +87,8 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'INFO')
 ```
 
-## Velodyne
+# `mrpt_sensor_velodyne`
+
 Supported models: `VLP16`,`HDL32`,`HDL64`
 
 ```bash
