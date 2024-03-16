@@ -148,7 +148,7 @@ void process_gps(
 	msg.position_covariance.fill(0.0);
 	msg.position_covariance[0] = mrpt::square(sigma_E);
 	msg.position_covariance[4] = mrpt::square(sigma_N);
-	msg.position_covariance[7] = mrpt::square(sigma_U);
+	msg.position_covariance[8] = mrpt::square(sigma_U);
 
 	node.gps_publisher_->publish(msg);
 }
