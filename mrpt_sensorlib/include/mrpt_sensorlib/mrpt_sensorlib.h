@@ -65,7 +65,10 @@ class GenericSensorNode : public rclcpp::Node
 	{
 		if (!pub)
 		{
-			pub = this->create_publisher<MSG_T>(publish_topic_, 1);
+			// QoS following REP-2003:
+			// See: https://ros.org/reps/rep-2003.html
+			pub = this->create_publisher<MSG_T>(
+				publish_topic_, rclcpp::SystemDefaultsQoS());
 
 			RCLCPP_INFO_STREAM(
 				this->get_logger(),

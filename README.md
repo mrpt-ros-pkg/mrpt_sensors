@@ -5,7 +5,9 @@
 | ROS2 Rolling (u24.04) | [![Build Status](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_jammy_amd64/) |  xxx | xxx |
 
 # mrpt_sensors
-ROS nodes for various robotics sensors via mrpt-hwdrivers
+ROS nodes for various robotics sensors via mrpt-hwdrivers.
+
+All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS 2 topic QoS.
 
 <!-- toc -->
 

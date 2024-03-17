@@ -223,9 +223,11 @@ void GenericSensorNode::process_observation(
 	{
 		if (!obs_publisher_)
 		{
+			// QoS following REP-2003:
+			// See: https://ros.org/reps/rep-2003.html
 			obs_publisher_ =
 				this->create_publisher<mrpt_msgs::msg::GenericObservation>(
-					publish_mrpt_obs_topic_, 1);
+					publish_mrpt_obs_topic_, rclcpp::SystemDefaultsQoS());
 
 			RCLCPP_INFO_STREAM(
 				this->get_logger(),
