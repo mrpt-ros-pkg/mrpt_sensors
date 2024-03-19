@@ -2,6 +2,9 @@
 Changelog for package mrpt_sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.3 (2023-06-14)
 ------------------
 * towards templatized specific sensor nodes
