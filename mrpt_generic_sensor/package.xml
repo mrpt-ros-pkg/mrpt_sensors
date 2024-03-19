@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>mrpt_generic_sensor</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>ROS node for interfacing any sensor supported by mrpt-hwdrivers</description>
 
   <author email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</author>

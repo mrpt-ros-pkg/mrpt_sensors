@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>mrpt_sensors</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>
     ROS nodes for various robotics sensors via mrpt-hwdrivers
   </description>
