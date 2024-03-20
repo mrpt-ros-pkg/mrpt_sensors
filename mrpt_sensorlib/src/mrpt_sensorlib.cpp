@@ -127,6 +127,9 @@ void GenericSensorNode::init(
 		this->declare_parameter("sensor_frame_id", sensor_frame_id_);
 		sensor_frame_id_ = this->get_parameter("sensor_frame_id").as_string();
 
+		this->declare_parameter("robot_frame_id", robot_frame_id_);
+		robot_frame_id_ = this->get_parameter("robot_frame_id").as_string();
+
 		// ----------------- End of common ROS 2 params -----------------
 
 		// Call sensor factory:
@@ -240,6 +243,9 @@ void GenericSensorNode::process_observation(
 		mrpt::serialization::ObjectToOctetVector(o.get(), msg.data);
 		obs_publisher_->publish(msg);
 	}
+
+	// Publish tf?
+	MRPT_TODO("Publish /tf");
 
 	// custom handling?
 	if (custom_process_sensor)

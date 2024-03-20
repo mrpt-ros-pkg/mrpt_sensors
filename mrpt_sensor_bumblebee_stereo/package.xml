@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrpt_sensor_bumblebee_stereo</name>
+  <version>0.0.1</version>
+  <description>ROS node for Bumblebee Stereo Cameras using libdc1394 interface (based on mrpt-hwdrivers)</description>
+
+  <url type="website">https://github.com/mrpt-ros-pkg/mrpt_sensors</url>
+  <maintainer email="joseluisblancoc@gmail.com">José Luis Blanco-Claraco</maintainer>
+
+  <author>José Luis Blanco-Claraco</author>
+
+  <license>BSD</license>
+  <url>https://wiki.ros.org/mrpt_msgs_bridge</url>
+
+  <build_depend>ros_environment</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+
+  <depend>mrpt2</depend>
+  <depend>mrpt_msgs</depend>
+  <depend>mrpt_sensorlib</depend>
+
+  <depend>ament_lint_common</depend>
+  <depend>ament_lint_auto</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>

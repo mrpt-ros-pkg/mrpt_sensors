@@ -10,7 +10,7 @@ import os
 
 
 def generate_launch_description():
-    namespace = 'gnss'
+    namespace = 'bumblebee_stereo'
 
     ld = LaunchDescription([
         # COMMON PARAMS TO ALL MRPT_SENSOR NODES:
@@ -18,7 +18,7 @@ def generate_launch_description():
         # Declare an argument for the config file
         DeclareLaunchArgument(
             'process_rate',
-            default_value='"50"',
+            default_value='"80"',
             description='Rate (Hz) for the process() main sensor loop.'
         ),
 
@@ -37,7 +37,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'publish_topic',
             default_value='sensor',
-            description='If not empty, messages of the appropriate type will be published to this topic for each sensor observation.'
+            description='If not empty, messages of type sensor_msg/Image will be published to this topic (plus suffix "_left"/"_right") for each sensor observation.'
         ),
 
         DeclareLaunchArgument(
@@ -54,16 +54,23 @@ def generate_launch_description():
 
         # PARAMS FOR THIS NODE:
         # --------------------------------------------
+
         DeclareLaunchArgument(
-            'serial_port',
-            default_value='',
-            description='Serial port to open'
+            'dc1394_framerate',
+            default_value='"15"',
+            description='eg: 7.5, 15, 30, 60, etc... For possibilities see mrpt::hwdrivers::TCaptureOptions_dc1394'
         ),
 
         DeclareLaunchArgument(
-            'serial_baud_rate',
-            default_value='"4800"',
-            description='Serial port baud rate (typ: 4800, 9600, etc.)'
+            'dc1394_camera_guid',
+            default_value='"0"',
+            description='0 (or not present): the first camera. A hexadecimal number (0x11223344): The GUID of the camera to open'
+        ),
+
+        DeclareLaunchArgument(
+            'camera_preview_decimation',
+            default_value='"0"',
+            description='N<=0 (or not present): No preview; N>0, display 1 out of N captured frames.'
         ),
 
         DeclareLaunchArgument(
@@ -81,6 +88,21 @@ def generate_launch_description():
             default_value='"0.0"',
             description='Sensor pose coordinate on the vehicle frame.'
         ),
+        DeclareLaunchArgument(
+            'sensor_pose_yaw',
+            default_value='"0.0"',
+            description='Sensor pose coordinate on the vehicle frame (degrees).'
+        ),
+        DeclareLaunchArgument(
+            'sensor_pose_pitch',
+            default_value='"0.0"',
+            description='Sensor pose coordinate on the vehicle frame (degrees).'
+        ),
+        DeclareLaunchArgument(
+            'sensor_pose_roll',
+            default_value='"0.0"',
+            description='Sensor pose coordinate on the vehicle frame (degrees).'
+        ),
 
         DeclareLaunchArgument(
             "log_level",
@@ -90,9 +112,9 @@ def generate_launch_description():
 
         # Node to launch the mrpt_generic_sensor_node
         Node(
-            package='mrpt_sensor_gnns_nmea',
-            executable='mrpt_sensor_gnns_nmea_node',
-            name='mrpt_sensor_gnns_nmea',
+            package='mrpt_sensor_bumblebee_stereo',
+            executable='mrpt_sensor_bumblebee_stereo_node',
+            name='mrpt_sensor_bumblebee_stereo',
             output='screen',
             arguments=['--ros-args', '--log-level',
                        LaunchConfiguration('log_level')],
@@ -112,12 +134,19 @@ def generate_launch_description():
                 # ------------------------------------------------
                 # node params:
                 # ------------------------------------------------
-                {'serial_port': LaunchConfiguration('serial_port')},
-                {'serial_baud_rate': LaunchConfiguration('serial_baud_rate')},
+                {'dc1394_framerate': LaunchConfiguration('dc1394_framerate')},
+                {'dc1394_camera_guid': LaunchConfiguration(
+                    'dc1394_camera_guid')},
+                {'camera_preview_decimation': LaunchConfiguration(
+                    'camera_preview_decimation')},
 
                 {'sensor_pose_x': LaunchConfiguration('sensor_pose_x')},
                 {'sensor_pose_y': LaunchConfiguration('sensor_pose_y')},
                 {'sensor_pose_z': LaunchConfiguration('sensor_pose_z')},
+                {'sensor_pose_yaw': LaunchConfiguration('sensor_pose_yaw')},
+                {'sensor_pose_pitch': LaunchConfiguration(
+                    'sensor_pose_pitch')},
+                {'sensor_pose_roll': LaunchConfiguration('sensor_pose_roll')},
             ]
         )
     ])

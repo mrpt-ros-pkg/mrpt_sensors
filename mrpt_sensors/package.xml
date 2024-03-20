@@ -16,7 +16,7 @@
 
   <!-- Specific sensor packages: -->
   <depend>mrpt_sensor_gnns_nmea</depend>
-
+  <depend>mrpt_sensor_bumblebee_stereo</depend>
 
 
 

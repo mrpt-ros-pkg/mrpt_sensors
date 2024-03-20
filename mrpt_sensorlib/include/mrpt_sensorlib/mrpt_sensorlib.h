@@ -9,6 +9,7 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <mrpt/hwdrivers/CGenericSensor.h>
@@ -61,14 +62,15 @@ class GenericSensorNode : public rclcpp::Node
 	// Public members and variables for easy access from functors in
 	// sensor-specific nodes
 	template <class MSG_T, class PUB_T>
-	void ensure_publisher_exists(PUB_T& pub)
+	void ensure_publisher_exists(
+		PUB_T& pub, const std::string& topicSuffix = "")
 	{
 		if (!pub)
 		{
 			// QoS following REP-2003:
 			// See: https://ros.org/reps/rep-2003.html
 			pub = this->create_publisher<MSG_T>(
-				publish_topic_, rclcpp::SystemDefaultsQoS());
+				publish_topic_ + topicSuffix, rclcpp::SystemDefaultsQoS());
 
 			RCLCPP_INFO_STREAM(
 				this->get_logger(),
@@ -80,12 +82,16 @@ class GenericSensorNode : public rclcpp::Node
 
 	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
 	rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
+	std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+		images_publisher_;
 
    private:
 	// ----------------- ROS 2 params -----------------
 	std::string out_rawlog_prefix_;
 
 	std::string sensor_frame_id_ = "sensor";
+	std::string robot_frame_id_ = "base_link";
+
 	std::string publish_mrpt_obs_topic_ = "sensor_mrpt";
 	std::string publish_topic_ = "sensor";
 	// -----------------------------------------------
