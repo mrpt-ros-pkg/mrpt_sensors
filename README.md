@@ -11,12 +11,29 @@ All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS
 
 <!-- toc -->
 
+- [`mrpt_sensor_bumblebee_stereo`](#mrpt_sensor_bumblebee_stereo)
 - [`mrpt_sensor_gnns_nmea`](#mrpt_sensor_gnns_nmea)
   * [Usage](#usage)
   * [Launch arguments](#launch-arguments)
 - [`mrpt_sensor_velodyne`](#mrpt_sensor_velodyne)
 
 <!-- tocstop -->
+
+# `mrpt_sensor_bumblebee_stereo`
+
+ROS 2 node for Bumblebee Stereo Cameras using libdc1394 interface.
+
+## Usage
+Supported models: Bumblebee2 stereo cameras with FireWire connection.
+
+```bash
+ros2 launch mrpt_sensor_bumblebee_stereo mrpt_sensor_bumblebee_stereo.launch.py
+```
+
+## Launch arguments
+
+Write me!
+
 
 # `mrpt_sensor_gnns_nmea`
 
@@ -97,3 +114,4 @@ ros2 launch mrpt_sensors velodyne.launch.py
 ```
 
 TODO: Document and explain parameters.
+
