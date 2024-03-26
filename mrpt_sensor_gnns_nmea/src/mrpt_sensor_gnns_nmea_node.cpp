@@ -6,9 +6,11 @@
    | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
    +------------------------------------------------------------------------+ */
 
-#include <rclcpp/rclcpp.hpp>
-#include <mrpt/ros2bridge/gps.h>
 #include <mrpt/core/bits_math.h>  // square()
+#include <mrpt/ros2bridge/gps.h>
+
+#include <rclcpp/rclcpp.hpp>
+
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
 
 const char* node_name = "mrpt_sensor_gnns_nmea";
@@ -65,61 +67,61 @@ double VDOP = 5.0;
 // See:
 // https://en.wikipedia.org/wiki/Error_analysis_for_the_Global_Positioning_System
 // https://www.gps-forums.com/threads/roughtly-converting-dop-to-metric-error.40105/
-constexpr double UERE = (6.7 / 3.0) * 2 /*conservative!*/;	// [m]
+constexpr double UERE = (6.7 / 3.0) * 2 /*conservative!*/;  // [m]
 
 // We will emit one ROS message per GGA NMEA frame.
 // toROS() below will return false if there is NO GGA frame.
 // But we want to keep an eye on other NMEA frames to learn about
 // fix status and accuracy, etc.
 void process_gps(
-	mrpt_sensors::GenericSensorNode& node,
-	const mrpt::obs::CObservation::Ptr& obs)
+    mrpt_sensors::GenericSensorNode& node,
+    const mrpt::obs::CObservation::Ptr& obs)
 {
-	auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
-	ASSERT_(o);
+    auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
+    ASSERT_(o);
 
-	// process messages:
-	if (auto gga = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GGA>();
-		gga)
-	{
-		// gga->fields.UTCTime // useful?
-		HDOP = gga->fields.HDOP;
-	}
+    // process messages:
+    if (auto gga = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GGA>();
+        gga)
+    {
+        // gga->fields.UTCTime // useful?
+        HDOP = gga->fields.HDOP;
+    }
 
-	if (auto gsa = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GSA>();
-		gsa)
-	{
-		VDOP = gsa->fields.VDOP;
-		HDOP = gsa->fields.HDOP;
+    if (auto gsa = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_GSA>();
+        gsa)
+    {
+        VDOP = gsa->fields.VDOP;
+        HDOP = gsa->fields.HDOP;
 
-		// we can identify the used sats and their constellation from
-		// these IDs:
-		// gsa->fields.PRNs
-		//
-		// See: https://docs.novatel.com/OEM7/Content/Messages/PRN_Numbers.htm
+        // we can identify the used sats and their constellation from
+        // these IDs:
+        // gsa->fields.PRNs
+        //
+        // See: https://docs.novatel.com/OEM7/Content/Messages/PRN_Numbers.htm
 
-		size_t numUsedSats = 0;
-		for (size_t i = 0;
-			 i < sizeof(gsa->fields.PRNs) / sizeof(gsa->fields.PRNs[0]); i++)
-		{
-			if (!gsa->fields.PRNs[i][0]) break;
-			numUsedSats++;
-		}
+        size_t numUsedSats = 0;
+        for (size_t i = 0;
+             i < sizeof(gsa->fields.PRNs) / sizeof(gsa->fields.PRNs[0]); i++)
+        {
+            if (!gsa->fields.PRNs[i][0]) break;
+            numUsedSats++;
+        }
 
-		RCLCPP_DEBUG_THROTTLE(
-			node.get_logger(), *node.get_clock(), 5000,
-			"GSA frame: %zu satellites used in solution.", numUsedSats);
-	}
-	if (auto rmc = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_RMC>();
-		rmc)
-	{
-		// rmc->fields.speed_knots // publish?
-		// rmc->getDateAsTimestamp() // Useful to publish to ROS?
-	}
+        RCLCPP_DEBUG_THROTTLE(
+            node.get_logger(), *node.get_clock(), 5000,
+            "GSA frame: %zu satellites used in solution.", numUsedSats);
+    }
+    if (auto rmc = o->getMsgByClassPtr<mrpt::obs::gnss::Message_NMEA_RMC>();
+        rmc)
+    {
+        // rmc->fields.speed_knots // publish?
+        // rmc->getDateAsTimestamp() // Useful to publish to ROS?
+    }
 
-	// publish them:
-	node.ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(
-		node.gps_publisher_);
+    // publish them:
+    node.ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(
+        node.gps_publisher_);
 
 #if 0
 	std::stringstream ss;
@@ -127,70 +129,69 @@ void process_gps(
 	RCLCPP_INFO_STREAM(node.get_logger(), ss.str());
 #endif
 
-	auto header = node.create_header(*o);
+    auto header = node.create_header(*o);
 
-	auto msg = sensor_msgs::msg::NavSatFix();
+    auto msg = sensor_msgs::msg::NavSatFix();
 
-	bool valid = mrpt::ros2bridge::toROS(*o, header, msg);
-	if (!valid) return;
+    bool valid = mrpt::ros2bridge::toROS(*o, header, msg);
+    if (!valid) return;
 
-	msg.position_covariance_type =
-		sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+    msg.position_covariance_type =
+        sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
 
-	const double sigma_E = HDOP * UERE;
-	const double sigma_N = HDOP * UERE;
-	const double sigma_U = VDOP * UERE;
+    const double sigma_E = HDOP * UERE;
+    const double sigma_N = HDOP * UERE;
+    const double sigma_U = VDOP * UERE;
 
-	RCLCPP_DEBUG_THROTTLE(
-		node.get_logger(), *node.get_clock(), 5000,
-		"Uncertainties: sigma_xy=%.03f m sigma_z=%.03f m", sigma_E, sigma_U);
+    RCLCPP_DEBUG_THROTTLE(
+        node.get_logger(), *node.get_clock(), 5000,
+        "Uncertainties: sigma_xy=%.03f m sigma_z=%.03f m", sigma_E, sigma_U);
 
-	msg.position_covariance.fill(0.0);
-	msg.position_covariance[0] = mrpt::square(sigma_E);
-	msg.position_covariance[4] = mrpt::square(sigma_N);
-	msg.position_covariance[8] = mrpt::square(sigma_U);
+    msg.position_covariance.fill(0.0);
+    msg.position_covariance[0] = mrpt::square(sigma_E);
+    msg.position_covariance[4] = mrpt::square(sigma_N);
+    msg.position_covariance[8] = mrpt::square(sigma_U);
 
-	node.gps_publisher_->publish(msg);
+    node.gps_publisher_->publish(msg);
 }
 }  // namespace
 
 int main(int argc, char** argv)
 {
-	try
-	{
-		// Init ROS:
-		rclcpp::init(argc, argv);
+    try
+    {
+        // Init ROS:
+        rclcpp::init(argc, argv);
 
-		auto node =
-			std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
+        auto node =
+            std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
 
-		node->custom_process_sensor =
-			[&node](const mrpt::obs::CObservation::Ptr& o) {
-				process_gps(*node, o);
-			};
+        node->custom_process_sensor =
+            [&node](const mrpt::obs::CObservation::Ptr& o)
+        { process_gps(*node, o); };
 
-		node->init(
-			sensorConfig,
-			{
-				{"process_rate", "PROCESS_RATE", "500", false},
-				{"serial_port", "SERIAL_PORT", "", true},
-				{"serial_baud_rate", "SERIAL_BAUD_RATE", "4800", false},
-				{"sensor_pose_x", "SENSOR_POSE_X", "0", false},
-				{"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
-				{"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
-			},
-			"SENSOR");
+        node->init(
+            sensorConfig,
+            {
+                {"process_rate", "PROCESS_RATE", "500", false},
+                {"serial_port", "SERIAL_PORT", "", true},
+                {"serial_baud_rate", "SERIAL_BAUD_RATE", "4800", false},
+                {"sensor_pose_x", "SENSOR_POSE_X", "0", false},
+                {"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
+                {"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
+            },
+            "SENSOR");
 
-		node->run();
+        node->run();
 
-		rclcpp::shutdown();
-		return 0;
-	}
-	catch (const std::exception& e)
-	{
-		RCLCPP_ERROR_STREAM(
-			rclcpp::get_logger(""),
-			"Exception in " << node_name << " main(): " << e.what());
-		return 1;
-	}
+        rclcpp::shutdown();
+        return 0;
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger(""),
+            "Exception in " << node_name << " main(): " << e.what());
+        return 1;
+    }
 }

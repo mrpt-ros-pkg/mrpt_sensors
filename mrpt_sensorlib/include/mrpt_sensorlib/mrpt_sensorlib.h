@@ -8,101 +8,110 @@
 
 #pragma once
 
+//
+#include <mrpt/config/CConfigFileBase.h>
+#include <mrpt/hwdrivers/CGenericSensor.h>
+#include <mrpt/obs/obs_frwds.h>
+
+//
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
+
+//
+#include <mrpt_msgs/msg/generic_observation.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
-#include <mrpt/hwdrivers/CGenericSensor.h>
-#include <mrpt/config/CConfigFileBase.h>
-#include <mrpt/obs/obs_frwds.h>
-#include <mrpt_msgs/msg/generic_observation.hpp>
-
-#include <functional>
 
 namespace mrpt_sensors
 {
 class GenericSensorNode : public rclcpp::Node
 {
    public:
-	GenericSensorNode(const std::string& nodeName = "generic_sensor_node");
-	~GenericSensorNode();
+    explicit GenericSensorNode(
+        const std::string& nodeName = "generic_sensor_node");
 
-	/// Initialize from INI file and section given by ROS2 parameters:
-	void init();
+    ~GenericSensorNode();
 
-	struct TemplateParameter
-	{
-		std::string ros_param_name;
-		std::string template_variable;
-		std::string default_value;
-		bool required;
-	};
+    /// Initialize from INI file and section given by ROS2 parameters:
+    void init();
 
-	/// Initialize from the given template text with a set of ROS2 parameters:
-	void init(
-		const char* templateText,
-		const std::vector<TemplateParameter>& rosParams,
-		const std::string& section = "SENSOR");
+    struct TemplateParameter
+    {
+        std::string ros_param_name;
+        std::string template_variable;
+        std::string default_value;
+        bool required;
+    };
 
-	/// Initialize from the given configuration source:
-	void init(
-		const mrpt::config::CConfigFileBase& config,
-		const std::string& section = "SENSOR");
+    /// Initialize from the given template text with a set of ROS2 parameters:
+    void init(
+        const char* templateText,
+        const std::vector<TemplateParameter>& rosParams,
+        const std::string& section = "SENSOR");
 
-	void run();
+    /// Initialize from the given configuration source:
+    void init(
+        const mrpt::config::CConfigFileBase& config,
+        const std::string& section = "SENSOR");
 
-	/// Once the observation is published as MRPT CObservation (if enabled),
-	/// it will be published as a ROS message by process_observation(), unless
-	/// a derived class implements this to handle it in a particular way.
-	std::function<void(const mrpt::obs::CObservation::Ptr&)>
-		custom_process_sensor;
+    void run();
 
-	std::function<void()> init_sensor_specific;
+    /// Once the observation is published as MRPT CObservation (if enabled),
+    /// it will be published as a ROS message by process_observation(), unless
+    /// a derived class implements this to handle it in a particular way.
+    std::function<void(const mrpt::obs::CObservation::Ptr&)>
+        custom_process_sensor;
 
-	// Public members and variables for easy access from functors in
-	// sensor-specific nodes
-	template <class MSG_T, class PUB_T>
-	void ensure_publisher_exists(
-		PUB_T& pub, const std::string& topicSuffix = "")
-	{
-		if (!pub)
-		{
-			// QoS following REP-2003:
-			// See: https://ros.org/reps/rep-2003.html
-			pub = this->create_publisher<MSG_T>(
-				publish_topic_ + topicSuffix, rclcpp::SystemDefaultsQoS());
+    std::function<void()> init_sensor_specific;
 
-			RCLCPP_INFO_STREAM(
-				this->get_logger(),
-				"Created publisher for topic: " << publish_topic_);
-		}
-	}
+    // Public members and variables for easy access from functors in
+    // sensor-specific nodes
+    template <class MSG_T, class PUB_T>
+    void ensure_publisher_exists(
+        PUB_T& pub, const std::string& topicSuffix = "")
+    {
+        if (!pub)
+        {
+            // QoS following REP-2003:
+            // See: https://ros.org/reps/rep-2003.html
+            pub = this->create_publisher<MSG_T>(
+                publish_topic_ + topicSuffix, rclcpp::SystemDefaultsQoS());
 
-	std_msgs::msg::Header create_header(const mrpt::obs::CObservation& o);
+            RCLCPP_INFO_STREAM(
+                this->get_logger(),
+                "Created publisher for topic: " << publish_topic_);
+        }
+    }
 
-	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
-	rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
-	std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
-		images_publisher_;
+    std_msgs::msg::Header create_header(const mrpt::obs::CObservation& o);
+
+    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
+    std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+        images_publisher_;
 
    private:
-	// ----------------- ROS 2 params -----------------
-	std::string out_rawlog_prefix_;
+    // ----------------- ROS 2 params -----------------
+    std::string out_rawlog_prefix_;
 
-	std::string sensor_frame_id_ = "sensor";
-	std::string robot_frame_id_ = "base_link";
+    std::string sensor_frame_id_ = "sensor";
+    std::string robot_frame_id_ = "base_link";
 
-	std::string publish_mrpt_obs_topic_ = "sensor_mrpt";
-	std::string publish_topic_ = "sensor";
-	// -----------------------------------------------
+    std::string publish_mrpt_obs_topic_ = "sensor_mrpt";
+    std::string publish_topic_ = "sensor";
+    // -----------------------------------------------
 
-	mrpt::hwdrivers::CGenericSensor::Ptr sensor_;
+    mrpt::hwdrivers::CGenericSensor::Ptr sensor_;
 
-	rclcpp::Publisher<mrpt_msgs::msg::GenericObservation>::SharedPtr
-		obs_publisher_;
+    rclcpp::Publisher<mrpt_msgs::msg::GenericObservation>::SharedPtr
+        obs_publisher_;
 
-	void process_observation(const mrpt::obs::CObservation::Ptr& o);
+    void process_observation(const mrpt::obs::CObservation::Ptr& o);
 
-	void process(const mrpt::obs::CObservationGPS& o);
+    void process(const mrpt::obs::CObservationGPS& o);
 };
 }  // namespace mrpt_sensors

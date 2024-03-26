@@ -6,10 +6,12 @@
    | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
    +------------------------------------------------------------------------+ */
 
-#include <rclcpp/rclcpp.hpp>
+#include <mrpt/core/bits_math.h>  // square()
 #include <mrpt/obs/CObservationStereoImages.h>
 #include <mrpt/ros2bridge/image.h>
-#include <mrpt/core/bits_math.h>  // square()
+
+#include <rclcpp/rclcpp.hpp>
+
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
 
 const char* node_name = "mrpt_sensor_bumblebee_stereo";
@@ -58,90 +60,89 @@ namespace
 {
 // We will emit two ROS messages per stereo observation.
 void process_gps(
-	mrpt_sensors::GenericSensorNode& node,
-	const mrpt::obs::CObservation::Ptr& obs)
+    mrpt_sensors::GenericSensorNode& node,
+    const mrpt::obs::CObservation::Ptr& obs)
 {
-	using namespace std::string_literals;
+    using namespace std::string_literals;
 
-	auto o =
-		std::dynamic_pointer_cast<mrpt::obs::CObservationStereoImages>(obs);
-	ASSERT_(o);
+    auto o =
+        std::dynamic_pointer_cast<mrpt::obs::CObservationStereoImages>(obs);
+    ASSERT_(o);
 
-	auto header = node.create_header(*o);
-	header.frame_id += "_left"s;
-	sensor_msgs::msg::Image msgLeft =
-		mrpt::ros2bridge::toROS(o->imageLeft, header);
+    auto header = node.create_header(*o);
+    header.frame_id += "_left"s;
+    sensor_msgs::msg::Image msgLeft =
+        mrpt::ros2bridge::toROS(o->imageLeft, header);
 
-	header = node.create_header(*o);
-	header.frame_id += "_right"s;
-	sensor_msgs::msg::Image msgRight =
-		mrpt::ros2bridge::toROS(o->imageRight, header);
+    header = node.create_header(*o);
+    header.frame_id += "_right"s;
+    sensor_msgs::msg::Image msgRight =
+        mrpt::ros2bridge::toROS(o->imageRight, header);
 
-	// publish them:
-	node.ensure_publisher_exists<sensor_msgs::msg::Image>(
-		node.images_publisher_["left"], "_left");
+    // publish them:
+    node.ensure_publisher_exists<sensor_msgs::msg::Image>(
+        node.images_publisher_["left"], "_left");
 
-	node.images_publisher_["left"]->publish(msgLeft);
+    node.images_publisher_["left"]->publish(msgLeft);
 
-	if (o->hasImageRight)
-	{
-		node.ensure_publisher_exists<sensor_msgs::msg::Image>(
-			node.images_publisher_["right"], "_right");
-		node.images_publisher_["right"]->publish(msgRight);
-	}
+    if (o->hasImageRight)
+    {
+        node.ensure_publisher_exists<sensor_msgs::msg::Image>(
+            node.images_publisher_["right"], "_right");
+        node.images_publisher_["right"]->publish(msgRight);
+    }
 }
 
 }  // namespace
 
 int main(int argc, char** argv)
 {
-	try
-	{
-		// Init ROS:
-		rclcpp::init(argc, argv);
+    try
+    {
+        // Init ROS:
+        rclcpp::init(argc, argv);
 
-		auto node =
-			std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
+        auto node =
+            std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
 
-		node->custom_process_sensor =
-			[&node](const mrpt::obs::CObservation::Ptr& o) {
-				process_gps(*node, o);
-			};
+        node->custom_process_sensor =
+            [&node](const mrpt::obs::CObservation::Ptr& o)
+        { process_gps(*node, o); };
 
-		node->init(
-			sensorConfig,
-			{
-				{"process_rate", "PROCESS_RATE", "80", false},
-				{"sensor_label", "SENSOR_LABEL", "stereo", false},
-				{"dc1394_framerate", "BUMBLEBEE_DC1394_FRAMERATE", "15", false},
+        node->init(
+            sensorConfig,
+            {
+                {"process_rate", "PROCESS_RATE", "80", false},
+                {"sensor_label", "SENSOR_LABEL", "stereo", false},
+                {"dc1394_framerate", "BUMBLEBEE_DC1394_FRAMERATE", "15", false},
 
-				{"dc1394_camera_guid", "BUMBLEBEE_DC1394_CAMERA_GUID", "0",
-				 false},
-				// 0 (or not present): the first camera. A hexadecimal
-				// number (0x11223344): The GUID of the camera to open
+                {"dc1394_camera_guid", "BUMBLEBEE_DC1394_CAMERA_GUID", "0",
+                 false},
+                // 0 (or not present): the first camera. A hexadecimal
+                // number (0x11223344): The GUID of the camera to open
 
-				{"camera_preview_decimation", "CAMERA_PREVIEW_DECIMATION", "0",
-				 false},
+                {"camera_preview_decimation", "CAMERA_PREVIEW_DECIMATION", "0",
+                 false},
 
-				{"sensor_pose_x", "SENSOR_POSE_X", "0", false},
-				{"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
-				{"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
-				{"sensor_pose_yaw", "SENSOR_POSE_YAW", "0", false},
-				{"sensor_pose_pitch", "SENSOR_POSE_PITCH", "0", false},
-				{"sensor_pose_roll", "SENSOR_POSE_ROLL", "0", false},
-			},
-			"SENSOR");
+                {"sensor_pose_x", "SENSOR_POSE_X", "0", false},
+                {"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
+                {"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
+                {"sensor_pose_yaw", "SENSOR_POSE_YAW", "0", false},
+                {"sensor_pose_pitch", "SENSOR_POSE_PITCH", "0", false},
+                {"sensor_pose_roll", "SENSOR_POSE_ROLL", "0", false},
+            },
+            "SENSOR");
 
-		node->run();
+        node->run();
 
-		rclcpp::shutdown();
-		return 0;
-	}
-	catch (const std::exception& e)
-	{
-		RCLCPP_ERROR_STREAM(
-			rclcpp::get_logger(""),
-			"Exception in " << node_name << " main(): " << e.what());
-		return 1;
-	}
+        rclcpp::shutdown();
+        return 0;
+    }
+    catch (const std::exception& e)
+    {
+        RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger(""),
+            "Exception in " << node_name << " main(): " << e.what());
+        return 1;
+    }
 }
