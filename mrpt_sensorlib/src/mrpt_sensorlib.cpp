@@ -203,7 +203,7 @@ void GenericSensorNode::run()
         sensor_->doProcess();
 
         // Get new observations
-        const CGenericSensor::TListObservations lstObjs =
+        const mrpt::hwdrivers::CGenericSensor::TListObservations lstObjs =
             sensor_->getObservations();
 
         for (const auto& [t, obj] : lstObjs)
