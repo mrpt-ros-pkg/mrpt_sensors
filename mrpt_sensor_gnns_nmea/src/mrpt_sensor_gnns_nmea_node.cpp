@@ -65,7 +65,7 @@ double VDOP = 5.0;
 // See:
 // https://en.wikipedia.org/wiki/Error_analysis_for_the_Global_Positioning_System
 // https://www.gps-forums.com/threads/roughtly-converting-dop-to-metric-error.40105/
-constexpr double UERE = 6.7 / 3.0;	// [m]
+constexpr double UERE = (6.7 / 3.0) * 2 /*conservative!*/;	// [m]
 
 // We will emit one ROS message per GGA NMEA frame.
 // toROS() below will return false if there is NO GGA frame.
