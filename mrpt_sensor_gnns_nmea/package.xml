@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>mrpt_sensor_gnns_nmea</name>
-  <version>0.0.1</version>
+  <version>0.1.0</version>
   <description>ROS node for GNNS receivers generating NMEA messages (based on mrpt-hwdrivers)</description>
 
   <url type="website">https://github.com/mrpt-ros-pkg/mrpt_sensors</url>

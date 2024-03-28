@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2024-03-28)
+------------------
 * publish sensor pose to /tf
 * fix missing namespace
 * Reformat with clang-format to fix ament_linters
