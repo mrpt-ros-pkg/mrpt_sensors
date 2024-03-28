@@ -17,6 +17,8 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
 
   <depend>mrpt2</depend>
   <depend>mrpt_msgs</depend>

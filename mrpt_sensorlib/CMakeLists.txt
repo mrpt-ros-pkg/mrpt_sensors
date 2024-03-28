@@ -3,6 +3,12 @@ project(mrpt_sensorlib)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+
 find_package(mrpt_msgs REQUIRED)
 find_package(mrpt-ros2bridge REQUIRED)
 find_package(mrpt-hwdrivers REQUIRED)
@@ -53,7 +59,9 @@ ament_target_dependencies(${PROJECT_NAME}
   mrpt-ros2bridge
   mrpt-hwdrivers
   mrpt_msgs
-#  tf2
+  tf2_geometry_msgs
+  tf2
+  tf2_ros
 )
 
 

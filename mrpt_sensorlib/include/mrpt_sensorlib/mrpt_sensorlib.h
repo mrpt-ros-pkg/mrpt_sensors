@@ -12,6 +12,7 @@
 #include <mrpt/config/CConfigFileBase.h>
 #include <mrpt/hwdrivers/CGenericSensor.h>
 #include <mrpt/obs/obs_frwds.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 //
 #include <functional>
@@ -20,6 +21,7 @@
 #include <vector>
 
 //
+
 #include <mrpt_msgs/msg/generic_observation.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -93,6 +95,7 @@ class GenericSensorNode : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
     std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
         images_publisher_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_bc_;
 
    private:
     // ----------------- ROS 2 params -----------------
@@ -100,9 +103,11 @@ class GenericSensorNode : public rclcpp::Node
 
     std::string sensor_frame_id_ = "sensor";
     std::string robot_frame_id_ = "base_link";
+    bool publish_sensor_pose_tf_ = true;
 
     std::string publish_mrpt_obs_topic_ = "sensor_mrpt";
     std::string publish_topic_ = "sensor";
+
     // -----------------------------------------------
 
     mrpt::hwdrivers::CGenericSensor::Ptr sensor_;

@@ -18,13 +18,18 @@
 #include <mrpt/ros2bridge/gps.h>
 #include <mrpt/ros2bridge/image.h>
 #include <mrpt/ros2bridge/point_cloud2.h>
+#include <mrpt/ros2bridge/pose.h>
 #include <mrpt/ros2bridge/time.h>
+
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 namespace mrpt_sensors
 {
 GenericSensorNode::GenericSensorNode(const std::string& nodeName)
     : Node(nodeName)
 {
+    tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 }
 
 GenericSensorNode::~GenericSensorNode() {}
@@ -129,6 +134,11 @@ void GenericSensorNode::init(
 
         this->declare_parameter("robot_frame_id", robot_frame_id_);
         robot_frame_id_ = this->get_parameter("robot_frame_id").as_string();
+
+        this->declare_parameter(
+            "publish_sensor_pose_tf", publish_sensor_pose_tf_);
+        publish_sensor_pose_tf_ =
+            this->get_parameter("publish_sensor_pose_tf").as_bool();
 
         // ----------------- End of common ROS 2 params -----------------
 
@@ -245,7 +255,20 @@ void GenericSensorNode::process_observation(
     }
 
     // Publish tf?
-    MRPT_TODO("Publish /tf");
+    if (publish_sensor_pose_tf_)
+    {
+        geometry_msgs::msg::TransformStamped tf;
+        tf.header.stamp = get_clock()->now();
+        tf.header.frame_id = this->robot_frame_id_;
+        tf.child_frame_id = this->sensor_frame_id_;
+
+        // Set translation
+        tf.transform =
+            tf2::toMsg(mrpt::ros2bridge::toROS_tfTransform(o->sensorPose()));
+
+        // Publish the transform
+        tf_bc_->sendTransform(tf);
+    }
 
     // custom handling?
     if (custom_process_sensor)
