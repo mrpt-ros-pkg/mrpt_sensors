@@ -99,6 +99,7 @@ class GenericSensorNode : public rclcpp::Node
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_bc_;
 
     const auto sensor_frame_id() const { return sensor_frame_id_; }
+    const auto publish_topic() const { return publish_topic_; }
 
    private:
     // ----------------- ROS 2 params -----------------
