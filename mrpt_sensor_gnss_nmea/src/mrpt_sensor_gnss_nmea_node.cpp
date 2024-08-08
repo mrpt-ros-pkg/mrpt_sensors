@@ -127,7 +127,7 @@ void process_gps(
 
     auto& pubs = NMEA_Pubs::Instance();
 
-    pubs.ensure_pubs_are_created(node, publish_topic_);
+    pubs.ensure_pubs_are_created(node, node.publish_topic());
 
     std_msgs::msg::Header msgHeader;
     msgHeader.frame_id = node.sensor_frame_id();
