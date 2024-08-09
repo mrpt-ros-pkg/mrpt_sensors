@@ -2,6 +2,9 @@
 Changelog for package mrpt_sensor_bumblebee_stereo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.1 (2024-07-03)
 ------------------
 * Add new driver for Novatel OEM6 + NTRIP server

@@ -2,6 +2,20 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#10 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/10>`_ from mrpt-ros-pkg/use-gnss-base-topic-name
+  Use gnss base topic name
+* Reuse base class publish topic name
+  add missing getter
+* Merge pull request `#8 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/8>`_ from mrpt-ros-pkg/use-gnss-base-topic-name
+  Reuse base class publish topic name
+* Reuse base class publish topic name
+* Merge pull request `#6 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/6>`_ from r-aguilera/ros2
+  fix uninitialized publishers in NMEA msg publishers
+* fix uninitialized publishers
+* Contributors: Jose Luis Blanco-Claraco, Raúl Aguilera
+
 0.2.1 (2024-07-03)
 ------------------
 * Fix typo in GNSS names

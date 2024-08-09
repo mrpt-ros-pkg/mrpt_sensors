@@ -2,6 +2,9 @@
 Changelog for package mrpt_generic_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.1 (2024-07-03)
 ------------------
 

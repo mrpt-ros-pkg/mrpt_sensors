@@ -2,6 +2,14 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#10 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/10>`_ from mrpt-ros-pkg/use-gnss-base-topic-name
+  Use gnss base topic name
+* Reuse base class publish topic name
+  add missing getter
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.1 (2024-07-03)
 ------------------
 * Publish NMEA ROS2 native msgs: GGA, GSA, RMC

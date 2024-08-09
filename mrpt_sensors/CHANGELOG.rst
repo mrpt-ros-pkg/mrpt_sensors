@@ -2,6 +2,9 @@
 Changelog for package mrpt_sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.1 (2024-07-03)
 ------------------
 * Fix typo in GNSS names
