@@ -2,6 +2,12 @@
 Changelog for package mrpt_generic_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update copyright comment blocks to try to make ament linter happy
+* Update to package XML format 3
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.2 (2024-08-09)
 ------------------
 
