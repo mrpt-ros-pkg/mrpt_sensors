@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.3 (2024-09-01)
+------------------
 * Update copyright comment blocks to try to make ament linter happy
 * Depend on new mrpt_lib packages (deprecate mrpt2)
 * Update to package XML format 3
