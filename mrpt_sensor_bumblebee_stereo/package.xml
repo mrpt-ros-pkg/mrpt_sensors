@@ -9,7 +9,7 @@
 
   <author>José Luis Blanco-Claraco</author>
 
-  <license>BSD</license>
+  <license>BSD-3-Clause</license>
   <url>https://wiki.ros.org/mrpt_msgs_bridge</url>
 
   <build_depend>ros_environment</build_depend>
