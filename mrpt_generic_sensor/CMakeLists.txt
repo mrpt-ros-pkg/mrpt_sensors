@@ -21,7 +21,6 @@ message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
 ###########
 ## Build ##
 ###########
-
 ## Declare a cpp executable
 add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 
@@ -31,16 +30,16 @@ target_link_libraries(${PROJECT_NAME}_node
   mrpt::ros2bridge
 )
 
-ament_target_dependencies(
+target_link_libraries(
   ${PROJECT_NAME}_node
-  "rclcpp"
-  "rclcpp_components"
-  "sensor_msgs"
-  "mrpt_sensorlib"
-  "mrpt_msgs"
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
+  rclcpp::rclcpp
+  rclcpp_components::component
+  sensor_msgs::sensor_msgs_library
+  mrpt_sensorlib::mrpt_sensorlib
+  mrpt_msgs::mrpt_msgs_library
+  tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
 )
 
 #############

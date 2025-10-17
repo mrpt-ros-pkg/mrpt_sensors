@@ -21,17 +21,17 @@ find_package(mrpt-hwdrivers REQUIRED)
 ## Declare a cpp executable
 add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 
-ament_target_dependencies(
+target_link_libraries(
   ${PROJECT_NAME}_node
-  "rclcpp"
-  "rclcpp_components"
-  "mrpt_sensorlib"
-  mrpt-ros2bridge
-  mrpt-hwdrivers
-  "mrpt_msgs"
-  tf2
-  tf2_ros
-  tf2_geometry_msgs
+  rclcpp::rclcpp
+  rclcpp_components::component
+  mrpt_sensorlib::mrpt_sensorlib
+  mrpt::ros2bridge
+  mrpt::hwdrivers
+  mrpt_msgs::mrpt_msgs_library
+  tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
 )
 
 #############

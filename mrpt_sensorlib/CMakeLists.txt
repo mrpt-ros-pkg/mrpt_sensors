@@ -54,14 +54,14 @@ install(DIRECTORY include/${PROJECT_NAME}
 )
 
 #############
-ament_target_dependencies(${PROJECT_NAME}
-  rclcpp
-  mrpt-ros2bridge
-  mrpt-hwdrivers
-  mrpt_msgs
-  tf2_geometry_msgs
-  tf2
-  tf2_ros
+target_link_libraries(${PROJECT_NAME}
+  rclcpp::rclcpp
+  mrpt::ros2bridge
+  mrpt::hwdrivers
+  mrpt_msgs::mrpt_msgs_library
+  tf2_geometry_msgs::tf2_geometry_msgs
+  tf2::tf2
+  tf2_ros::tf2_ros
 )
 
 
