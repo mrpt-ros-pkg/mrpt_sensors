@@ -2,6 +2,11 @@
 Changelog for package mrpt_sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* package.xml: update license tag to BSD-3-Clause
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.3 (2024-09-01)
 ------------------
 

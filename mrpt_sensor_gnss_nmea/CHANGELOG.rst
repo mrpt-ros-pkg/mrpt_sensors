@@ -2,6 +2,12 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Replace deprecated ament_target_dependencies() with standard cmake
+* package.xml: update license tag to BSD-3-Clause
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.3 (2024-09-01)
 ------------------
 * Update copyright comment blocks to try to make ament linter happy
