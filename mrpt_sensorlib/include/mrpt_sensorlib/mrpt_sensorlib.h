@@ -123,6 +123,24 @@ class GenericSensorNode : public rclcpp::Node
   const auto sensor_frame_id() const { return sensor_frame_id_; }
   const auto publish_topic() const { return publish_topic_; }
 
+  /// Get access to the underlying MRPT sensors (use with caution)
+  /// @return Vector of sensor pointers
+  const std::vector<mrpt::hwdrivers::CGenericSensor::Ptr>& sensors() const { return sensors_; }
+
+  /// Get a sensor by index, cast to the specified type
+  /// @tparam T The sensor type to cast to (e.g., mrpt::hwdrivers::CGPSInterface)
+  /// @param index Sensor index (0-based)
+  /// @return Pointer to the sensor, or nullptr if index invalid or cast fails
+  template <typename T>
+  T* getSensor(size_t index = 0)
+  {
+    if (index >= sensors_.size())
+    {
+      return nullptr;
+    }
+    return dynamic_cast<T*>(sensors_[index].get());
+  }
+
  private:
   // ----------------- ROS 2 params -----------------
   std::string out_rawlog_prefix_;
