@@ -51,6 +51,7 @@
 #include <mrpt/ros2bridge/pose.h>
 #include <mrpt/ros2bridge/time.h>
 
+#include <exception>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -301,7 +302,15 @@ void GenericSensorNode::process_observation(
 
         mrpt_msgs::msg::GenericObservation msg;
         msg.header.frame_id = sensor_frame_id_;
-        msg.header.stamp = mrpt::ros2bridge::toROS(o->timestamp);
+        try
+        {
+            msg.header.stamp = mrpt::ros2bridge::toROS(o->timestamp);
+        }
+        catch (const std::exception& e)
+        {  // Stamps may lead to negative ROS times for edge cases (initializing
+           // GPS systems...)
+            msg.header.stamp = get_clock()->now();
+        }
         mrpt::serialization::ObjectToOctetVector(o.get(), msg.data);
         obs_publisher_->publish(msg);
     }
@@ -363,7 +372,16 @@ std_msgs::msg::Header GenericSensorNode::create_header(
 {
     std_msgs::msg::Header header;
     header.frame_id = sensor_frame_id_;
-    header.stamp = mrpt::ros2bridge::toROS(o.timestamp);
+    try
+    {
+        header.stamp = mrpt::ros2bridge::toROS(o.timestamp);
+    }
+    catch (const std::exception& e)
+    {  // Stamps may lead to negative ROS times for edge cases (initializing
+       // GPS systems...)
+        header.stamp = get_clock()->now();
+    }
+
     return header;
 }
 

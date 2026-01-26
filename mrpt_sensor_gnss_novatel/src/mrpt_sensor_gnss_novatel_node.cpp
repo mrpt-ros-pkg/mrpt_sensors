@@ -162,7 +162,15 @@ void process_gps(
 
     std_msgs::msg::Header msgHeader;
     msgHeader.frame_id = node.sensor_frame_id();
-    msgHeader.stamp = mrpt::ros2bridge::toROS(obs->timestamp);
+    try
+    {
+        msgHeader.stamp = mrpt::ros2bridge::toROS(obs->timestamp);
+    }
+    catch (const std::exception& e)
+    {  // Stamps may lead to negative ROS times for edge cases (initializing
+       // GPS systems...)
+        msgHeader.stamp = node.get_clock()->now();
+    }
 
     node.ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(
         node.gps_publisher_);
