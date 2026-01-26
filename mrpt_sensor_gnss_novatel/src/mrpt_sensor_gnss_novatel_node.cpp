@@ -153,32 +153,29 @@ namespace
 // toROS() below will return false if there is NO GGA frame.
 // But we want to keep an eye on other NMEA frames to learn about
 // fix status and accuracy, etc.
-void process_gps(
-    mrpt_sensors::GenericSensorNode& node,
-    const mrpt::obs::CObservation::Ptr& obs)
+void process_gps(mrpt_sensors::GenericSensorNode& node, const mrpt::obs::CObservation::Ptr& obs)
 {
-    auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
-    ASSERT_(o);
+  auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
+  ASSERT_(o);
 
-    std_msgs::msg::Header msgHeader;
-    msgHeader.frame_id = node.sensor_frame_id();
-    try
-    {
-        msgHeader.stamp = mrpt::ros2bridge::toROS(obs->timestamp);
-    }
-    catch (const std::exception& e)
-    {  // Stamps may lead to negative ROS times for edge cases (initializing
-       // GPS systems...)
-        msgHeader.stamp = node.get_clock()->now();
-    }
+  std_msgs::msg::Header msgHeader;
+  msgHeader.frame_id = node.sensor_frame_id();
+  try
+  {
+    msgHeader.stamp = mrpt::ros2bridge::toROS(obs->timestamp);
+  }
+  catch (const std::exception& e)
+  {  // Stamps may lead to negative ROS times for edge cases (initializing
+     // GPS systems...)
+    msgHeader.stamp = node.get_clock()->now();
+  }
 
-    node.ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(
-        node.gps_publisher_);
+  node.ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(node.gps_publisher_);
 
 #if 1
-    std::stringstream ss;
-    o->getDescriptionAsText(ss);
-    RCLCPP_INFO_STREAM(node.get_logger(), ss.str());
+  std::stringstream ss;
+  o->getDescriptionAsText(ss);
+  RCLCPP_INFO_STREAM(node.get_logger(), ss.str());
 #endif
 
 #if 0
@@ -212,59 +209,52 @@ void process_gps(
 
 int main(int argc, char** argv)
 {
-    try
-    {
-        // Init ROS:
-        rclcpp::init(argc, argv);
+  try
+  {
+    // Init ROS:
+    rclcpp::init(argc, argv);
 
-        auto node =
-            std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
+    auto node = std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
 
-        node->custom_process_sensor =
-            [&node](const mrpt::obs::CObservation::Ptr& o)
-        { process_gps(*node, o); };
+    node->custom_process_sensor = [&node](const mrpt::obs::CObservation::Ptr& o)
+    { process_gps(*node, o); };
 
-        node->init(
-            sensorConfig,
-            {
-                {"process_rate", "PROCESS_RATE", "500", false},
-                {"novatel_main_serial_port", "NOVATEL_SERIAL_PORT", "", true},
-                {"novatel_ntrip_serial_port", "NOVATEL_NTRIP_INPUT_SERIAL_PORT",
-                 "", true},
-                {"serial_baud_rate", "SERIAL_BAUD_RATE", "4800", false},
-                {"raw_dump_file", "RAW_DUMP_FILE", "", false},
-                {"novatel_imu_orientation", "SETIMUORIENTATION", "6", false},
-                {"novatel_veh_body_rotation", "VEHICLEBODYROTATION",
-                 "0.000000 0.000000 90.000000 0.000000 0.000000 0.000000",
-                 false},
-                {"novatel_imu_to_ant_offset", "SETIMUTOANTOFFSET",
-                 "-0.28 -0.08 -0.01 0.000000 0.000000 0.000000", false},
-                {"novatel_ins_offset", "SETINSOFFSET",
-                 "0.000000 0.000000 0.000000", false},
-                {"novatel_init_azimuth", "SETINITAZIMUTH", "0.000000 25.000000",
-                 false},
-                {"sensor_pose_x", "SENSOR_POSE_X", "0", false},
-                {"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
-                {"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
+    node->init(
+        sensorConfig,
+        {
+            {"process_rate", "PROCESS_RATE", "500", false},
+            {"novatel_main_serial_port", "NOVATEL_SERIAL_PORT", "", true},
+            {"novatel_ntrip_serial_port", "NOVATEL_NTRIP_INPUT_SERIAL_PORT", "", true},
+            {"serial_baud_rate", "SERIAL_BAUD_RATE", "4800", false},
+            {"raw_dump_file", "RAW_DUMP_FILE", "", false},
+            {"novatel_imu_orientation", "SETIMUORIENTATION", "6", false},
+            {"novatel_veh_body_rotation", "VEHICLEBODYROTATION",
+             "0.000000 0.000000 90.000000 0.000000 0.000000 0.000000", false},
+            {"novatel_imu_to_ant_offset", "SETIMUTOANTOFFSET",
+             "-0.28 -0.08 -0.01 0.000000 0.000000 0.000000", false},
+            {"novatel_ins_offset", "SETINSOFFSET", "0.000000 0.000000 0.000000", false},
+            {"novatel_init_azimuth", "SETINITAZIMUTH", "0.000000 25.000000", false},
+            {"sensor_pose_x", "SENSOR_POSE_X", "0", false},
+            {"sensor_pose_y", "SENSOR_POSE_Y", "0", false},
+            {"sensor_pose_z", "SENSOR_POSE_Z", "0", false},
 
-                {"ntrip_server", "NTRIP_SERVER", "www.euref-ip.net", false},
-                {"ntrip_port", "NTRIP_PORT", "\"2101\"", false},
-                {"ntrip_mount_point", "NTRIP_MOUNT_POINT", "ALME00ESP0", false},
-                {"ntrip_user", "NTRIP_USER", "user", false},
-                {"ntrip_password", "NTRIP_PASSWORD", "pass", false},
-            },
-            {"GPS", "NTRIP"});
+            {"ntrip_server", "NTRIP_SERVER", "www.euref-ip.net", false},
+            {"ntrip_port", "NTRIP_PORT", "\"2101\"", false},
+            {"ntrip_mount_point", "NTRIP_MOUNT_POINT", "ALME00ESP0", false},
+            {"ntrip_user", "NTRIP_USER", "user", false},
+            {"ntrip_password", "NTRIP_PASSWORD", "pass", false},
+        },
+        {"GPS", "NTRIP"});
 
-        node->run();
+    node->run();
 
-        rclcpp::shutdown();
-        return 0;
-    }
-    catch (const std::exception& e)
-    {
-        RCLCPP_ERROR_STREAM(
-            rclcpp::get_logger(""),
-            "Exception in " << node_name << " main(): " << e.what());
-        return 1;
-    }
+    rclcpp::shutdown();
+    return 0;
+  }
+  catch (const std::exception& e)
+  {
+    RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger(""), "Exception in " << node_name << " main(): " << e.what());
+    return 1;
+  }
 }
