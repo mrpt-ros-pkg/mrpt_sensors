@@ -1,7 +1,7 @@
 /* +------------------------------------------------------------------------+
    |                             mrpt_sensors                               |
    |                                                                        |
-   | Copyright (c) 2017-2024, Individual contributors, see commit authors   |
+   | Copyright (c) 2017-2026, Individual contributors, see commit authors   |
    | See: https://github.com/mrpt-ros-pkg/mrpt_sensors                      |
    |                                                                        |
    | Redistribution and use in source and binary forms, with or without     |
