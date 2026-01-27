@@ -567,7 +567,7 @@ int main(int argc, char** argv)
           debugLogThrottleLastStamp = tNow;
           std::stringstream ss;
           o->getDescriptionAsText(ss);
-          RCLCPP_DEBUG(node->get_logger(), "%s", ss.str().c_str());
+          RCLCPP_INFO(node->get_logger(), "%s", ss.str().c_str());
         }
       }
 

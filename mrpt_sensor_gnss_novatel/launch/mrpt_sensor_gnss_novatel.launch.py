@@ -134,12 +134,12 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'external_imu_max_age_sec',
-            default_value='"2.0"',
+            default_value='2.0',
             description='Maximum age (seconds) of external IMU data to be considered valid.'
         ),
         DeclareLaunchArgument(
             'external_imu_azimuth_deg_for_yaw_zero',
-            default_value='"0.0"',
+            default_value='0.0',
             description='Offset between the IMU yaw=0 direction and true North (the azimuth reference), in degrees.'
         ),
 
