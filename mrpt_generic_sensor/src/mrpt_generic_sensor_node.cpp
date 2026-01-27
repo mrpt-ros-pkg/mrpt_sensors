@@ -32,6 +32,7 @@
    | OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   |
    |                                                                        |
    | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
+   | SPDX-License-Identifier: BSD-3-Clause                                  |
    +------------------------------------------------------------------------+ */
 
 #include <rclcpp/rclcpp.hpp>
