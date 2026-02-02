@@ -55,6 +55,7 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <tf2/LinearMath/Matrix3x3.hpp>
 #include <tf2/LinearMath/Quaternion.hpp>
+#include <novatel_oem6_msgs/srv/send_novatel_command.hpp>
 
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
 
@@ -488,6 +489,38 @@ int main(int argc, char** argv)
                 state.external_imu.azimuth_deg, state.external_imu.azimuth_std_deg);
           });
     }
+
+    // Service to send custom commands to Novatel
+    auto send_command_srv = node->create_service<novatel_oem6_msgs::srv::SendNovatelCommand>(
+        "~/send_novatel_command",
+        [&state, &logger](
+            const std::shared_ptr<novatel_oem6_msgs::srv::SendNovatelCommand::Request> request,
+            std::shared_ptr<novatel_oem6_msgs::srv::SendNovatelCommand::Response> response)
+        {
+          if (!state.gps_interface)
+          {
+            RCLCPP_ERROR(logger, "GPS interface not available for sending commands");
+            response->done_ok = false;
+            return;
+          }
+
+          std::string cmd = request->command + "\r\n";
+          RCLCPP_INFO(logger, "Sending custom command: %s", request->command.c_str());
+
+          response->done_ok = state.gps_interface->sendCustomCommand(cmd.c_str(), cmd.length());
+
+          if (response->done_ok)
+          {
+            RCLCPP_INFO(logger, "Command sent successfully");
+          }
+          else
+          {
+            RCLCPP_ERROR(logger, "Failed to send command");
+          }
+        });
+
+    RCLCPP_INFO(logger, "Service '~/send_novatel_command' ready");
+
 
     // Custom GPS observation processing
     node->custom_process_sensor = [&node, &state, &logger](const mrpt::obs::CObservation::Ptr& obs)

@@ -1,0 +1,5 @@
+# Send a custom text command to the SPAN receiver. A newline (CR+LF) will be added automatically.
+
+string command
+---
+bool done_ok

@@ -24,6 +24,7 @@ All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS
 # Table of Contents
 - [`mrpt_sensor_bumblebee_stereo`](#mrpt_sensor_bumblebee_stereo)
 - [`mrpt_sensor_gnss_nmea`](#mrpt_sensor_gnss_nmea)
+- [`mrpt_sensor_gnss_novatel`](#mrpt_sensor_gnss_novatel)
 - [`mrpt_sensor_imu_taobotics`](#mrpt_sensor_imu_taobotics)
 - [`mrpt_sensor_velodyne`](#mrpt_sensor_velodyne)
 - [Individual package build status](#individual-package-build-status)
@@ -348,6 +349,85 @@ Arguments (pass arguments as '<name>:=<value>'):
 ```
 </details>
 
+
+<details>
+  <summary>Quick Reference: SendNovatelCommand Service</summary>
+
+## Service Call from Command Line
+
+### Basic Syntax
+```bash
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'YOUR_COMMAND_HERE'}"
+```
+
+## Common Examples
+
+### Set Initial Azimuth (Critical for INS Alignment)
+```bash
+# Format: SETINITAZIMUTH <azimuth_degrees> <std_dev_degrees>
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'SETINITAZIMUTH 90.0 10.0'}"
+```
+
+### Configure IMU Orientation
+```bash
+# See Novatel manual Table 9 for orientation codes
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'SETIMUORIENTATION 6'}"
+```
+
+### INS Control Commands
+```bash
+# Enable INS
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'INSCOMMAND ENABLE'}"
+
+# Disable INS
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'INSCOMMAND DISABLE'}"
+
+# Reset INS
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'INSCOMMAND RESET'}"
+```
+
+### Alignment Mode
+```bash
+# Set alignment mode (UNAIDED, KINEMATIC, AUTOMATIC, etc.)
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'ALIGNMENTMODE UNAIDED'}"
+```
+
+### Satellite Configuration
+```bash
+# Set elevation mask (degrees above horizon)
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'ECUTOFF 10'}"
+
+# Set C/N0 mask (signal strength threshold)
+ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
+    novatel_oem6_msgs/srv/SendNovatelCommand \
+    "{command: 'CNOECUTOFF 25'}"
+```
+
+## Notes
+
+1. **CR+LF Added Automatically**: You don't need to add `\r\n` - the service does this
+2. **Command Case**: Commands are case-insensitive in Novatel firmware
+3. **Service Namespace**: Default is `/gnss/mrpt_sensor_gnss_novatel/`
+4. **Response**: Service returns `done_ok: true` if command was sent (not if it succeeded on receiver)
+5. **Verification**: Check receiver response by monitoring the node's log output or relevant message topics
+
+</details>
 
 # `mrpt_sensor_imu_taobotics`
 
