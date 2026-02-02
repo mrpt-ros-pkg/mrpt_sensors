@@ -22,10 +22,10 @@ uint32 utc_wn
 uint32 tot
 
 # UTC constant term [s]
-float64 utc_a0
+float64 a0_utc
 
 # UTC 1st order term [s/s]
-float64 utc_a1
+float64 a1_utc
 
 # Future week number for leap second
 uint32 wn_lsf

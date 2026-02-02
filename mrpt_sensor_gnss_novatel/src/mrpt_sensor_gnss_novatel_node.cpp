@@ -48,6 +48,26 @@
 
 #include <cmath>
 #include <mutex>
+#include <novatel_oem6_msgs/msg/bestpos.hpp>
+#include <novatel_oem6_msgs/msg/detail/inscovs__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/inspvas__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/ionutc__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/mark2_time__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/markpos__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/marktime__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/rawephem__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/rawimus__struct.hpp>
+#include <novatel_oem6_msgs/msg/detail/rxstatus__struct.hpp>
+#include <novatel_oem6_msgs/msg/inscovs.hpp>
+#include <novatel_oem6_msgs/msg/inspvas.hpp>
+#include <novatel_oem6_msgs/msg/ionutc.hpp>
+#include <novatel_oem6_msgs/msg/mark2_time.hpp>
+#include <novatel_oem6_msgs/msg/markpos.hpp>
+#include <novatel_oem6_msgs/msg/marktime.hpp>
+#include <novatel_oem6_msgs/msg/rawephem.hpp>
+#include <novatel_oem6_msgs/msg/rawimus.hpp>
+#include <novatel_oem6_msgs/msg/rxstatus.hpp>
+#include <novatel_oem6_msgs/srv/send_novatel_command.hpp>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -55,7 +75,6 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <tf2/LinearMath/Matrix3x3.hpp>
 #include <tf2/LinearMath/Quaternion.hpp>
-#include <novatel_oem6_msgs/srv/send_novatel_command.hpp>
 
 #include "mrpt_sensorlib/mrpt_sensorlib.h"
 
@@ -251,6 +270,263 @@ void checkAndSendAzimuth(NovatelNodeState& state, rclcpp::Node& node, rclcpp::Lo
   {
     RCLCPP_ERROR(logger, "Failed to send azimuth command");
   }
+}
+
+struct NovatelPublishers
+{
+  rclcpp::Publisher<novatel_oem6_msgs::msg::BESTPOS>::SharedPtr bestpos;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::INSPVAS>::SharedPtr inspvas;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::INSCOVS>::SharedPtr inscovs;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::RAWIMUS>::SharedPtr rawimus;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::MARKPOS>::SharedPtr markpos;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::MARKTIME>::SharedPtr marktime;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::MARK2TIME>::SharedPtr mark2time;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::IONUTC>::SharedPtr ionutc;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::RAWEPHEM>::SharedPtr rawephem;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::RXSTATUS>::SharedPtr rxstatus;
+};
+
+template <typename T>
+void ensurePublisher(
+    typename rclcpp::Publisher<T>::SharedPtr& pub, rclcpp::Node* node, const std::string& topic)
+{
+  if (!pub)
+  {
+    pub = node->create_publisher<T>(topic, rclcpp::SensorDataQoS());
+  }
+}
+
+// ============================================================================
+// CONVERSION FUNCTIONS (add to anonymous namespace)
+// ============================================================================
+
+novatel_oem6_msgs::msg::BESTPOS convertBESTPOS(
+    const mrpt::obs::gnss::Message_NV_OEM6_BESTPOS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::BESTPOS out;
+  out.header = header;
+
+  out.solution_stat = msg.fields.solution_stat;
+  out.position_type = msg.fields.position_type;
+  out.lat = msg.fields.lat;
+  out.lon = msg.fields.lon;
+  out.hgt = msg.fields.hgt;
+  out.undulation = msg.fields.undulation;
+  out.datum_id = msg.fields.datum_id;
+  out.lat_sigma = msg.fields.lat_sigma;
+  out.lon_sigma = msg.fields.lon_sigma;
+  out.hgt_sigma = msg.fields.hgt_sigma;
+  out.base_station_id = std::string(msg.fields.base_station_id, 4);
+  out.diff_age = msg.fields.diff_age;
+  out.sol_age = msg.fields.sol_age;
+  out.num_sats_tracked = msg.fields.num_sats_tracked;
+  out.num_sats_sol = msg.fields.num_sats_sol;
+  out.num_sats_sol_l1 = msg.fields.num_sats_sol_L1;
+  out.num_sats_sol_multi = msg.fields.num_sats_sol_multi;
+  out.reserved = msg.fields.reserved;
+  out.ext_sol_stat = msg.fields.ext_sol_stat;
+  out.galileo_beidou_mask = msg.fields.galileo_beidou_mask;
+  out.gps_glonass_mask = msg.fields.gps_glonass_mask;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::INSPVAS convertINSPVAS(
+    const mrpt::obs::gnss::Message_NV_OEM6_INSPVAS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::INSPVAS out;
+  out.header = header;
+
+  out.week = msg.fields.week;
+  out.seconds_in_week = msg.fields.seconds_in_week;
+  out.lat = msg.fields.lat;
+  out.lon = msg.fields.lon;
+  out.hgt = msg.fields.hgt;
+  out.vel_north = msg.fields.vel_north;
+  out.vel_east = msg.fields.vel_east;
+  out.vel_up = msg.fields.vel_up;
+  out.roll = msg.fields.roll;
+  out.pitch = msg.fields.pitch;
+  out.azimuth = msg.fields.azimuth;
+  out.ins_status = msg.fields.ins_status;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::INSCOVS convertINSCOVS(
+    const mrpt::obs::gnss::Message_NV_OEM6_INSCOVS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::INSCOVS out;
+  out.header = header;
+
+  out.week = msg.fields.week;
+  out.seconds_in_week = msg.fields.seconds_in_week;
+
+  for (int i = 0; i < 9; i++)
+  {
+    out.pos_cov[i] = msg.fields.pos_cov[i];
+    out.att_cov[i] = msg.fields.att_cov[i];
+    out.vel_cov[i] = msg.fields.vel_cov[i];
+  }
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::RAWIMUS convertRAWIMUS(
+    const mrpt::obs::gnss::Message_NV_OEM6_RAWIMUS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::RAWIMUS out;
+  out.header = header;
+
+  out.week = msg.fields.week;
+  out.week_seconds = msg.fields.week_seconds;
+  out.imu_status = msg.fields.imu_status;
+  out.accel_z = msg.fields.accel_z;
+  out.accel_y_neg = msg.fields.accel_y_neg;
+  out.accel_x = msg.fields.accel_x;
+  out.gyro_z = msg.fields.gyro_z;
+  out.gyro_y_neg = msg.fields.gyro_y_neg;
+  out.gyro_x = msg.fields.gyro_x;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::MARKPOS convertMARKPOS(
+    const mrpt::obs::gnss::Message_NV_OEM6_MARKPOS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::MARKPOS out;
+  out.header = header;
+
+  out.solution_stat = msg.fields.solution_stat;
+  out.position_type = msg.fields.position_type;
+  out.lat = msg.fields.lat;
+  out.lon = msg.fields.lon;
+  out.hgt = msg.fields.hgt;
+  out.undulation = msg.fields.undulation;
+  out.datum_id = msg.fields.datum_id;
+  out.lat_sigma = msg.fields.lat_sigma;
+  out.lon_sigma = msg.fields.lon_sigma;
+  out.hgt_sigma = msg.fields.hgt_sigma;
+  out.base_station_id = std::string(msg.fields.base_station_id, 4);
+  out.diff_age = msg.fields.diff_age;
+  out.sol_age = msg.fields.sol_age;
+  out.num_sats_tracked = msg.fields.num_sats_tracked;
+  out.num_sats_sol = msg.fields.num_sats_sol;
+  out.num_sats_sol_l1 = msg.fields.num_sats_sol_L1;
+  out.num_sats_sol_multi = msg.fields.num_sats_sol_multi;
+  out.reserved = msg.fields.reserved;
+  out.ext_sol_stat = msg.fields.ext_sol_stat;
+  out.galileo_beidou_mask = msg.fields.galileo_beidou_mask;
+  out.gps_glonass_mask = msg.fields.gps_glonass_mask;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::MARKTIME convertMARKTIME(
+    const mrpt::obs::gnss::Message_NV_OEM6_MARKTIME& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::MARKTIME out;
+  out.header = header;
+
+  out.week = msg.fields.week;
+  out.week_seconds = msg.fields.week_seconds;
+  out.clock_offset = msg.fields.clock_offset;
+  out.clock_offset_std = msg.fields.clock_offset_std;
+  out.utc_offset = msg.fields.utc_offset;
+  out.clock_status = msg.fields.clock_status;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::MARK2TIME convertMARK2TIME(
+    const mrpt::obs::gnss::Message_NV_OEM6_MARK2TIME& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::MARK2TIME out;
+  out.header = header;
+
+  out.week = msg.fields.week;
+  out.week_seconds = msg.fields.week_seconds;
+  out.clock_offset = msg.fields.clock_offset;
+  out.clock_offset_std = msg.fields.clock_offset_std;
+  out.utc_offset = msg.fields.utc_offset;
+  out.clock_status = msg.fields.clock_status;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::IONUTC convertIONUTC(
+    const mrpt::obs::gnss::Message_NV_OEM6_IONUTC& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::IONUTC out;
+  out.header = header;
+
+  out.a0 = msg.fields.a0;
+  out.a1 = msg.fields.a1;
+  out.a2 = msg.fields.a2;
+  out.a3 = msg.fields.a3;
+  out.b0 = msg.fields.b0;
+  out.b1 = msg.fields.b1;
+  out.b2 = msg.fields.b2;
+  out.b3 = msg.fields.b3;
+  out.utc_wn = msg.fields.utc_wn;
+  out.tot = msg.fields.tot;
+  out.a0_utc = msg.fields.A0;
+  out.a1_utc = msg.fields.A1;
+  out.wn_lsf = msg.fields.wn_lsf;
+  out.dn = msg.fields.dn;
+  out.deltat_ls = msg.fields.deltat_ls;
+  out.deltat_lsf = msg.fields.deltat_lsf;
+  out.reserved = msg.fields.reserved;
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::RAWEPHEM convertRAWEPHEM(
+    const mrpt::obs::gnss::Message_NV_OEM6_RAWEPHEM& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::RAWEPHEM out;
+  out.header = header;
+
+  out.sat_prn = msg.fields.sat_prn;
+  out.ref_week = msg.fields.ref_week;
+  out.ref_secs = msg.fields.ref_secs;
+
+  std::copy(
+      std::begin(msg.fields.subframe1), std::end(msg.fields.subframe1), out.subframe1.begin());
+  std::copy(
+      std::begin(msg.fields.subframe2), std::end(msg.fields.subframe2), out.subframe2.begin());
+  std::copy(
+      std::begin(msg.fields.subframe3), std::end(msg.fields.subframe3), out.subframe3.begin());
+
+  return out;
+}
+
+novatel_oem6_msgs::msg::RXSTATUS convertRXSTATUS(
+    const mrpt::obs::gnss::Message_NV_OEM6_RXSTATUS& msg, const std_msgs::msg::Header& header)
+{
+  novatel_oem6_msgs::msg::RXSTATUS out;
+  out.header = header;
+
+  out.error = msg.fields.error;
+  out.num_stats = msg.fields.num_stats;
+  out.rxstat = msg.fields.rxstat;
+  out.rxstat_pri = msg.fields.rxstat_pri;
+  out.rxstat_set = msg.fields.rxstat_set;
+  out.rxstat_clear = msg.fields.rxstat_clear;
+  out.aux1stat = msg.fields.aux1stat;
+  out.aux1stat_pri = msg.fields.aux1stat_pri;
+  out.aux1stat_set = msg.fields.aux1stat_set;
+  out.aux1stat_clear = msg.fields.aux1stat_clear;
+  out.aux2stat = msg.fields.aux2stat;
+  out.aux2stat_pri = msg.fields.aux2stat_pri;
+  out.aux2stat_set = msg.fields.aux2stat_set;
+  out.aux2stat_clear = msg.fields.aux2stat_clear;
+  out.aux3stat = msg.fields.aux3stat;
+  out.aux3stat_pri = msg.fields.aux3stat_pri;
+  out.aux3stat_set = msg.fields.aux3stat_set;
+  out.aux3stat_clear = msg.fields.aux3stat_clear;
+
+  return out;
 }
 
 }  // anonymous namespace
@@ -521,9 +797,13 @@ int main(int argc, char** argv)
 
     RCLCPP_INFO(logger, "Service '~/send_novatel_command' ready");
 
+    // Publishers for Novatel binary messages
+    NovatelPublishers nvt_pubs;
 
     // Custom GPS observation processing
-    node->custom_process_sensor = [&node, &state, &logger](const mrpt::obs::CObservation::Ptr& obs)
+
+    node->custom_process_sensor =
+        [&node, &state, &logger, &nvt_pubs](const mrpt::obs::CObservation::Ptr& obs)
     {
       auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
       if (!o)
@@ -537,13 +817,23 @@ int main(int argc, char** argv)
 
       node->ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(node->gps_publisher_);
 
-      // Check for INSPVAS message to monitor INS status
+      // Publish Novatel binary messages as ROS2 messages
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_BESTPOS>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_BESTPOS>();
+        ensurePublisher<novatel_oem6_msgs::msg::BESTPOS>(
+            nvt_pubs.bestpos, node.get(), "~/novatel/bestpos");
+        nvt_pubs.bestpos->publish(convertBESTPOS(msg, msgHeader));
+      }
+
       if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_INSPVAS>())
       {
-        const auto& inspvas = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_INSPVAS>();
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_INSPVAS>();
+        ensurePublisher<novatel_oem6_msgs::msg::INSPVAS>(
+            nvt_pubs.inspvas, node.get(), "~/novatel/inspvas");
+        nvt_pubs.inspvas->publish(convertINSPVAS(msg, msgHeader));
 
-        auto ins_status = static_cast<InsStatus>(inspvas.fields.ins_status);
-
+        auto ins_status = static_cast<InsStatus>(msg.fields.ins_status);
         {
           std::lock_guard<std::mutex> lock(state.mutex);
           if (ins_status != state.last_ins_status)
@@ -553,7 +843,6 @@ int main(int argc, char** argv)
                 insStatusToString(ins_status));
             state.last_ins_status = ins_status;
 
-            // Reset azimuth flag if status regresses
             if (ins_status == InsStatus::INS_WAITING_AZIMUTH ||
                 ins_status == InsStatus::INS_ALIGNING || ins_status == InsStatus::INS_INACTIVE)
             {
@@ -561,14 +850,74 @@ int main(int argc, char** argv)
             }
           }
         }
-
-        // Try to send azimuth if INS is waiting for it
         checkAndSendAzimuth(state, *node, logger);
       }
 
-      // Log BESTPOS solution status changes
-      std::optional<std::array<double, 3>> enu_sigmas;
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_INSCOVS>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_INSCOVS>();
+        ensurePublisher<novatel_oem6_msgs::msg::INSCOVS>(
+            nvt_pubs.inscovs, node.get(), "~/novatel/inscovs");
+        nvt_pubs.inscovs->publish(convertINSCOVS(msg, msgHeader));
+      }
 
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_RAWIMUS>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_RAWIMUS>();
+        ensurePublisher<novatel_oem6_msgs::msg::RAWIMUS>(
+            nvt_pubs.rawimus, node.get(), "~/novatel/rawimus");
+        nvt_pubs.rawimus->publish(convertRAWIMUS(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_MARKPOS>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_MARKPOS>();
+        ensurePublisher<novatel_oem6_msgs::msg::MARKPOS>(
+            nvt_pubs.markpos, node.get(), "~/novatel/markpos");
+        nvt_pubs.markpos->publish(convertMARKPOS(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_MARKTIME>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_MARKTIME>();
+        ensurePublisher<novatel_oem6_msgs::msg::MARKTIME>(
+            nvt_pubs.marktime, node.get(), "~/novatel/marktime");
+        nvt_pubs.marktime->publish(convertMARKTIME(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_MARK2TIME>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_MARK2TIME>();
+        ensurePublisher<novatel_oem6_msgs::msg::MARK2TIME>(
+            nvt_pubs.mark2time, node.get(), "~/novatel/mark2time");
+        nvt_pubs.mark2time->publish(convertMARK2TIME(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_IONUTC>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_IONUTC>();
+        ensurePublisher<novatel_oem6_msgs::msg::IONUTC>(
+            nvt_pubs.ionutc, node.get(), "~/novatel/ionutc");
+        nvt_pubs.ionutc->publish(convertIONUTC(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_RAWEPHEM>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_RAWEPHEM>();
+        ensurePublisher<novatel_oem6_msgs::msg::RAWEPHEM>(
+            nvt_pubs.rawephem, node.get(), "~/novatel/rawephem");
+        nvt_pubs.rawephem->publish(convertRAWEPHEM(msg, msgHeader));
+      }
+
+      if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_RXSTATUS>())
+      {
+        const auto& msg = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_RXSTATUS>();
+        ensurePublisher<novatel_oem6_msgs::msg::RXSTATUS>(
+            nvt_pubs.rxstatus, node.get(), "~/novatel/rxstatus");
+        nvt_pubs.rxstatus->publish(convertRXSTATUS(msg, msgHeader));
+      }
+
+      std::optional<std::array<double, 3>> enu_sigmas;
       if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_BESTPOS>())
       {
         const auto& bestpos = o->getMsgByClass<mrpt::obs::gnss::Message_NV_OEM6_BESTPOS>();
@@ -589,7 +938,6 @@ int main(int argc, char** argv)
         enu_sgm[2] = bestpos.fields.hgt_sigma;
       }
 
-      // VERBOSE: print full observation
       if (VERBOSE)
       {
         constexpr double DEBUG_LOG_THROTTLE_PERIOD = 5.0;
@@ -604,14 +952,12 @@ int main(int argc, char** argv)
         }
       }
 
-      // Publish NavSatFix
       auto header = node->create_header(*o);
       auto msg = sensor_msgs::msg::NavSatFix();
 
       bool valid = mrpt::ros2bridge::toROS(*o, header, msg);
       if (valid)
       {
-        // Do we have ENU sigmas?
         if (enu_sigmas.has_value())
         {
           msg.position_covariance_type =
