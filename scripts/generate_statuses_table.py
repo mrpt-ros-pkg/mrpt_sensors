@@ -21,7 +21,6 @@ def process_directories(path, items_to_remove, pattern_text):
     sorted_directories = sorted(directories, key=extract_plain_name)
 
     for plain_name in sorted_directories:
-
         # Check if the plain name passes the filter
         if plain_name not in items_to_remove:
             # Print the pattern text with the name
@@ -32,11 +31,20 @@ def process_directories(path, items_to_remove, pattern_text):
 path_to_search = '..'
 items_to_remove = ['scripts', 'docs',
                    '.vscode', '.github', '.circleci', '.git']
-pattern_text = \
-    "| {name} | "\
-    "[![Build Status](https://build.ros2.org/job/Hbin_uJ64__{name}__ubuntu_jammy_amd64__binary/badge/icon)](https://build.ros2.org/job/Hbin_uJ64__{name}__ubuntu_jammy_amd64__binary/) | "\
-    "[![Build Status](https://build.ros2.org/job/Ibin_uJ64__{name}__ubuntu_jammy_amd64__binary/badge/icon)](https://build.ros2.org/job/Ibin_uJ64__{name}__ubuntu_jammy_amd64__binary/) | "\
-    "[![Build Status](https://build.ros2.org/job/Jbin_uN64__{name}__ubuntu_noble_amd64__binary/badge/icon)](https://build.ros2.org/job/Jbin_uN64__{name}__ubuntu_noble_amd64__binary/) |" \
-    "[![Build Status](https://build.ros2.org/job/Rbin_uN64__{name}__ubuntu_noble_amd64__binary/badge/icon)](https://build.ros2.org/job/Rbin_uN64__{name}__ubuntu_noble_amd64__binary/) |"
+
+# Updated pattern:
+# - Removed IRON (Ibin)
+# - Added KILTED (Kbin)
+pattern_text = (
+    "| {name} | "
+    "[![Build Status](https://build.ros2.org/job/Hbin_uJ64__{name}__ubuntu_jammy_amd64__binary/badge/icon)]"
+    "(https://build.ros2.org/job/Hbin_uJ64__{name}__ubuntu_jammy_amd64__binary/) | "
+    "[![Build Status](https://build.ros2.org/job/Jbin_uN64__{name}__ubuntu_noble_amd64__binary/badge/icon)]"
+    "(https://build.ros2.org/job/Jbin_uN64__{name}__ubuntu_noble_amd64__binary/) | "
+    "[![Build Status](https://build.ros2.org/job/Kbin_uN64__{name}__ubuntu_noble_amd64__binary/badge/icon)]"
+    "(https://build.ros2.org/job/Kbin_uN64__{name}__ubuntu_noble_amd64__binary/) | "
+    "[![Build Status](https://build.ros2.org/job/Rbin_uN64__{name}__ubuntu_noble_amd64__binary/badge/icon)]"
+    "(https://build.ros2.org/job/Rbin_uN64__{name}__ubuntu_noble_amd64__binary/) |"
+)
 
 process_directories(path_to_search, items_to_remove, pattern_text)
