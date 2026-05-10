@@ -20,4 +20,4 @@ find \
     mrpt_sensorlib \
     mrpt_sensors \
     \( -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.c" \) \
-  -print0 | xargs -0 clang-format-14 "${MODE[@]}"
+  -print0 | xargs -0 -r -t clang-format-14 "${MODE[@]}"
