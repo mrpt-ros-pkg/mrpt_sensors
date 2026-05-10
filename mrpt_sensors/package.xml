@@ -5,9 +5,10 @@
   <version>0.2.4</version>
   <description>ROS nodes for various robotics sensors via mrpt-hwdrivers. Metapackage for all mrpt_sensor packages.</description>
   <maintainer email="jlblanco@ual.es">Jose-Luis Blanco-Claraco</maintainer>
-  <author>Jose-Luis Blanco-Claraco</author>
   <license>BSD-3-Clause</license>
   <url>https://github.com/mrpt-ros-pkg/mrpt_sensors/</url>
+
+  <author>Jose-Luis Blanco-Claraco</author>
   
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -22,8 +23,8 @@
 
 
 
-  <depend>ament_lint_common</depend>
-  <depend>ament_lint_auto</depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
