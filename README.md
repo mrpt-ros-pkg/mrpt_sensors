@@ -35,21 +35,23 @@ All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS
 
 All sensor nodes in this package publish ROS 2 diagnostics to the `/diagnostics` topic via the
 [`diagnostic_updater`](https://github.com/ros/diagnostics) package. The diagnostic status tracks
-three conditions:
+these conditions:
 
 | Status | Condition |
 |--------|-----------|
 | `WARN` | Node started but no observation has arrived yet within the startup timeout window |
-| `ERROR` | Sensor was working but no observation has been received for longer than 3× the expected period |
+| `ERROR` | Sensor exception (e.g., serial port unavailable) - node keeps retrying every `retry_on_error_delay` seconds |
+| `ERROR` | Sensor was working but no observation has been received for longer than 3x the expected period |
 | `WARN` | Observation rate is below 50% of the configured expected rate |
 | `OK` | Observations are arriving at the expected rate |
 
-Two ROS 2 parameters control the diagnostic thresholds (settable at launch or via `ros2 param set`):
+ROS 2 parameters controlling diagnostic thresholds and retry behavior (settable at launch or via `ros2 param set`):
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `diag_startup_timeout` | `30.0` s | How long to wait for the first observation before reporting an error |
 | `diag_expected_rate` | `1.0` Hz | Expected observation rate; used for stale and rate-warning checks |
+| `retry_on_error_delay` | `5.0` s | How long to wait before retrying after a sensor exception |
 
 The diagnostic status also reports the measured observation rate, the observation count, and the
 hardware ID (node name).

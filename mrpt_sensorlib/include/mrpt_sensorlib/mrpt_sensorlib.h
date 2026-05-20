@@ -173,11 +173,13 @@ class GenericSensorNode : public rclcpp::Node
   diagnostic_updater::Updater diag_updater_{this};
   double diag_startup_timeout_ = 30.0;  // [s] ROS 2 param
   double diag_expected_rate_ = 1.0;  // [Hz] ROS 2 param
+  double retry_on_error_delay_ = 5.0;  // [s] ROS 2 param
 
   double stamp_node_start_ = 0;
   double stamp_last_obs_ = 0;
   uint64_t obs_count_ = 0;
   double diag_obs_rate_ = 0;  // smoothed obs rate [Hz]
+  std::string sensor_last_error_;  // non-empty while in retry-after-error state
 
   void diag_callback(diagnostic_updater::DiagnosticStatusWrapper& stat);
 };

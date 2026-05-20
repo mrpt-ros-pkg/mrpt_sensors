@@ -57,6 +57,7 @@
 #include <exception>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <thread>
 
 namespace mrpt_sensors
 {
@@ -173,6 +174,9 @@ void GenericSensorNode::init(
     this->declare_parameter("diag_expected_rate", diag_expected_rate_);
     diag_expected_rate_ = this->get_parameter("diag_expected_rate").as_double();
 
+    this->declare_parameter("retry_on_error_delay", retry_on_error_delay_);
+    retry_on_error_delay_ = this->get_parameter("retry_on_error_delay").as_double();
+
     // ----------------- End of common ROS 2 params -----------------
 
     diag_updater_.setHardwareID(this->get_name());
@@ -245,9 +249,24 @@ void GenericSensorNode::run()
   rclcpp::Rate loop_rate(rate);
   while (rclcpp::ok())
   {
+    bool had_error = false;
     for (auto& sensor : sensors_)
     {
-      sensor->doProcess();
+      try
+      {
+        sensor->doProcess();
+      }
+      catch (const std::exception& e)
+      {
+        had_error = true;
+        sensor_last_error_ = e.what();
+        RCLCPP_ERROR_STREAM(
+            this->get_logger(), "Exception in sensor doProcess(): " << e.what() << "\nRetrying in "
+                                                                    << retry_on_error_delay_
+                                                                    << " s...");
+        diag_updater_.force_update();
+        break;
+      }
 
       // Get new observations
       const mrpt::hwdrivers::CGenericSensor::TListObservations lstObjs = sensor->getObservations();
@@ -261,7 +280,21 @@ void GenericSensorNode::run()
     }
 
     rclcpp::spin_some(this->get_node_base_interface());
-    loop_rate.sleep();
+
+    if (had_error)
+    {
+      const double t0 = mrpt::Clock::nowDouble();
+      while (rclcpp::ok() && mrpt::Clock::nowDouble() - t0 < retry_on_error_delay_)
+      {
+        rclcpp::spin_some(this->get_node_base_interface());
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    }
+    else
+    {
+      sensor_last_error_.clear();
+      loop_rate.sleep();
+    }
   }
 }
 
@@ -411,7 +444,13 @@ void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrappe
   const double tNow = mrpt::Clock::nowDouble();
   const double elapsed = tNow - stamp_node_start_;
 
-  if (obs_count_ == 0)
+  if (!sensor_last_error_.empty())
+  {
+    stat.summaryf(
+        diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Sensor error (retrying every %.1f s): %s",
+        retry_on_error_delay_, sensor_last_error_.c_str());
+  }
+  else if (obs_count_ == 0)
   {
     if (elapsed < diag_startup_timeout_)
     {
@@ -423,7 +462,7 @@ void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrappe
     {
       stat.summary(
           diagnostic_msgs::msg::DiagnosticStatus::ERROR,
-          "No observations received — sensor may not be connected.");
+          "No observations received - sensor may not be connected.");
     }
   }
   else
@@ -435,7 +474,7 @@ void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrappe
     {
       stat.summaryf(
           diagnostic_msgs::msg::DiagnosticStatus::ERROR,
-          "No observations for %.1f s — sensor may have disconnected.", age);
+          "No observations for %.1f s - sensor may have disconnected.", age);
     }
     else if (diag_obs_rate_ < 0.5 * diag_expected_rate_)
     {
@@ -446,7 +485,7 @@ void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrappe
     else
     {
       stat.summaryf(
-          diagnostic_msgs::msg::DiagnosticStatus::OK, "OK — %.2f Hz (expected %.2f Hz).",
+          diagnostic_msgs::msg::DiagnosticStatus::OK, "OK - %.2f Hz (expected %.2f Hz).",
           diag_obs_rate_, diag_expected_rate_);
     }
   }
