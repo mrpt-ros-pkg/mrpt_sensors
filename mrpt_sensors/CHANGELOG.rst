@@ -2,6 +2,9 @@
 Changelog for package mrpt_sensors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.4 (2025-10-27)
 ------------------
 * package.xml: update license tag to BSD-3-Clause

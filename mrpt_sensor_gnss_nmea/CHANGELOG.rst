@@ -2,6 +2,12 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* FIX: Don't throw if an invalid stamp arrives from the sensor
+* remove obsolete dependencies
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.4 (2025-10-27)
 ------------------
 * Replace deprecated ament_target_dependencies() with standard cmake

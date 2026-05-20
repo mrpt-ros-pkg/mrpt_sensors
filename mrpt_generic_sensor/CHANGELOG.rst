@@ -2,6 +2,9 @@
 Changelog for package mrpt_generic_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.4 (2025-10-27)
 ------------------
 * Replace deprecated ament_target_dependencies() with standard cmake

@@ -2,6 +2,28 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(mrpt_sensorlib): retry on sensor exception instead of crashing
+  When doProcess() throws (e.g. serial port unavailable at startup),
+  catch the exception, report ERROR via /diagnostics, and retry after
+  retry_on_error_delay seconds (default 5 s, tunable via ROS 2 param).
+* feat(mrpt_sensorlib): add /diagnostics support to all sensor nodes
+  Centralised in GenericSensorNode so every sensor package inherits it
+  automatically without any per-package changes.
+  State machine:
+  - WARN "initialising" for the first `diag_startup_timeout` seconds (default 30 s)
+  - ERROR if no observation received after that timeout
+  - ERROR if time since last observation exceeds 3× the expected period (stale)
+  - WARN if smoothed rate < 50% of expected rate
+  - OK otherwise
+  New ROS 2 parameters (both in mrpt_sensorlib):
+  diag_startup_timeout  [s]  (default 30.0)
+  diag_expected_rate    [Hz] (default 1.0)
+* Novatel SPAN node can now subscribe to an IMU and use its orientation to initialize the INS azimuth
+* FIX: Don't throw if an invalid stamp arrives from the sensor
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.4 (2025-10-27)
 ------------------
 * Replace deprecated ament_target_dependencies() with standard cmake

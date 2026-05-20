@@ -2,6 +2,16 @@
 Changelog for package mrpt_sensor_gnss_novatel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Publish oem6 ros2 messages too
+* Add novatel_oem6_msgs package and service to send custom commands to Novatel
+* Fix param type errors
+* Fix obsolete tf headers
+* Novatel SPAN node can now subscribe to an IMU and use its orientation to initialize the INS azimuth
+* FIX: Don't throw if an invalid stamp arrives from the sensor
+* Contributors: Jose Luis Blanco-Claraco
+
 0.2.4 (2025-10-27)
 ------------------
 * Replace deprecated ament_target_dependencies() with standard cmake
