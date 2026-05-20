@@ -44,6 +44,8 @@
 #include <mrpt/serialization/CArchive.h>
 #include <mrpt/system/filesystem.h>
 
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
+
 // MRPT -> ROS bridge:
 #include <mrpt/ros2bridge/gps.h>
 #include <mrpt/ros2bridge/image.h>
@@ -61,6 +63,7 @@ namespace mrpt_sensors
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
 {
   tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+  stamp_node_start_ = mrpt::Clock::nowDouble();
 }
 
 GenericSensorNode::~GenericSensorNode() {}
@@ -164,7 +167,16 @@ void GenericSensorNode::init(
     publish_sensor_pose_tf_minimum_period_ =
         this->get_parameter("publish_sensor_pose_tf_minimum_period").as_double();
 
+    this->declare_parameter("diag_startup_timeout", diag_startup_timeout_);
+    diag_startup_timeout_ = this->get_parameter("diag_startup_timeout").as_double();
+
+    this->declare_parameter("diag_expected_rate", diag_expected_rate_);
+    diag_expected_rate_ = this->get_parameter("diag_expected_rate").as_double();
+
     // ----------------- End of common ROS 2 params -----------------
+
+    diag_updater_.setHardwareID(this->get_name());
+    diag_updater_.add("Sensor status", this, &GenericSensorNode::diag_callback);
 
     // For each defined sensor:
     for (const auto& section : sections)
@@ -255,6 +267,21 @@ void GenericSensorNode::run()
 
 void GenericSensorNode::process_observation(const mrpt::obs::CObservation::Ptr& o)
 {
+  const double tNow = mrpt::Clock::nowDouble();
+  if (stamp_last_obs_ > 0)
+  {
+    const double dt = tNow - stamp_last_obs_;
+    if (dt > 0)
+    {
+      // Exponential moving average of instantaneous rate
+      const double alpha = 0.1;
+      diag_obs_rate_ = (1.0 - alpha) * diag_obs_rate_ + alpha * (1.0 / dt);
+    }
+  }
+  stamp_last_obs_ = tNow;
+  obs_count_++;
+  diag_updater_.force_update();
+
   // generic MRPT observation object:
   if (!publish_mrpt_obs_topic_.empty())
   {
@@ -285,8 +312,6 @@ void GenericSensorNode::process_observation(const mrpt::obs::CObservation::Ptr& 
   }
 
   // Publish tf?
-  const double tNow = mrpt::Clock::nowDouble();
-
   if (publish_sensor_pose_tf_ && robot_frame_id_ != sensor_frame_id_ &&
       tNow - stamp_last_tf_publish_ >= publish_sensor_pose_tf_minimum_period_)
   {
@@ -379,6 +404,58 @@ void GenericSensorNode::process(const mrpt::obs::CObservationIMU& o)
   if (!valid) return;
 
   imu_publisher_->publish(msg);
+}
+
+void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrapper& stat)
+{
+  const double tNow = mrpt::Clock::nowDouble();
+  const double elapsed = tNow - stamp_node_start_;
+
+  if (obs_count_ == 0)
+  {
+    if (elapsed < diag_startup_timeout_)
+    {
+      stat.summary(
+          diagnostic_msgs::msg::DiagnosticStatus::WARN,
+          "Sensor initializing, waiting for first observation...");
+    }
+    else
+    {
+      stat.summary(
+          diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+          "No observations received — sensor may not be connected.");
+    }
+  }
+  else
+  {
+    const double age = tNow - stamp_last_obs_;
+    const double stale_threshold = 3.0 / std::max(diag_expected_rate_, 0.01);
+
+    if (age > stale_threshold)
+    {
+      stat.summaryf(
+          diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+          "No observations for %.1f s — sensor may have disconnected.", age);
+    }
+    else if (diag_obs_rate_ < 0.5 * diag_expected_rate_)
+    {
+      stat.summaryf(
+          diagnostic_msgs::msg::DiagnosticStatus::WARN,
+          "Rate %.2f Hz is below 50%% of expected %.2f Hz.", diag_obs_rate_, diag_expected_rate_);
+    }
+    else
+    {
+      stat.summaryf(
+          diagnostic_msgs::msg::DiagnosticStatus::OK, "OK — %.2f Hz (expected %.2f Hz).",
+          diag_obs_rate_, diag_expected_rate_);
+    }
+  }
+
+  stat.add("Observations received", obs_count_);
+  stat.add("Measured rate (Hz)", diag_obs_rate_);
+  stat.add("Expected rate (Hz)", diag_expected_rate_);
+  stat.add("Seconds since last obs", (obs_count_ > 0) ? (tNow - stamp_last_obs_) : -1.0);
+  stat.add("Startup timeout (s)", diag_startup_timeout_);
 }
 
 }  // namespace mrpt_sensors
