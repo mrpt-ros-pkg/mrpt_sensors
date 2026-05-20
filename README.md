@@ -22,6 +22,7 @@ All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS
 <!-- md_toc github  < README.md -->
 
 # Table of Contents
+- [Diagnostics support](#diagnostics-support)
 - [`mrpt_sensor_bumblebee_stereo`](#mrpt_sensor_bumblebee_stereo)
 - [`mrpt_sensor_gnss_nmea`](#mrpt_sensor_gnss_nmea)
 - [`mrpt_sensor_gnss_novatel`](#mrpt_sensor_gnss_novatel)
@@ -29,6 +30,87 @@ All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS
 - [`mrpt_sensor_velodyne`](#mrpt_sensor_velodyne)
 - [novatel_oem6_msgs](novatel_oem6_msgs/)
 - [Individual package build status](#individual-package-build-status)
+
+# Diagnostics support
+
+All sensor nodes in this package publish ROS 2 diagnostics to the `/diagnostics` topic via the
+[`diagnostic_updater`](https://github.com/ros/diagnostics) package. The diagnostic status tracks
+three conditions:
+
+| Status | Condition |
+|--------|-----------|
+| `WARN` | Node started but no observation has arrived yet within the startup timeout window |
+| `ERROR` | Sensor was working but no observation has been received for longer than 3× the expected period |
+| `WARN` | Observation rate is below 50% of the configured expected rate |
+| `OK` | Observations are arriving at the expected rate |
+
+Two ROS 2 parameters control the diagnostic thresholds (settable at launch or via `ros2 param set`):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `diag_startup_timeout` | `30.0` s | How long to wait for the first observation before reporting an error |
+| `diag_expected_rate` | `1.0` Hz | Expected observation rate; used for stale and rate-warning checks |
+
+The diagnostic status also reports the measured observation rate, the observation count, and the
+hardware ID (node name).
+
+## Viewing diagnostics
+
+Echo the raw topic directly:
+
+```bash
+ros2 topic echo /diagnostics
+```
+
+For a human-friendly live view, use `rqt_runtime_monitor` or the `ros2 run` equivalent:
+
+```bash
+ros2 run rqt_runtime_monitor rqt_runtime_monitor
+```
+
+## Running a diagnostic aggregator
+
+The `diagnostic_aggregator` collects and categorizes `/diagnostics` messages into
+`/diagnostics_agg`. This is required by tools such as `robot_monitor`. To launch one quickly for
+testing, install the package and create a minimal analyzers config:
+
+```bash
+sudo apt install ros-${ROS_DISTRO}-diagnostic-aggregator
+```
+
+Create a file `analyzers.yaml`:
+
+```yaml
+analyzers:
+  ros__parameters:
+    path: Sensors
+    sensors:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Sensors
+      contains:
+        - 'Sensor status'
+```
+
+Then run the aggregator with that config:
+
+```bash
+ros2 run diagnostic_aggregator aggregator_node --ros-args \
+    --params-file analyzers.yaml
+```
+
+In a separate terminal, echo the aggregated output:
+
+```bash
+ros2 topic echo /diagnostics_agg
+```
+
+Or open `rqt_robot_monitor` for a tree view:
+
+```bash
+ros2 run rqt_robot_monitor rqt_robot_monitor
+```
+
+---
 
 # `mrpt_sensor_bumblebee_stereo`
 

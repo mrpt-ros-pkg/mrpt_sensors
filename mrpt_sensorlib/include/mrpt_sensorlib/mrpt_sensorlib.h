@@ -53,6 +53,7 @@
 
 //
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <mrpt_msgs/msg/generic_observation.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -167,5 +168,17 @@ class GenericSensorNode : public rclcpp::Node
 
   void process(const mrpt::obs::CObservationGPS& o);
   void process(const mrpt::obs::CObservationIMU& o);
+
+  // ----------------- Diagnostics -----------------
+  diagnostic_updater::Updater diag_updater_{this};
+  double diag_startup_timeout_ = 30.0;  // [s] ROS 2 param
+  double diag_expected_rate_ = 1.0;  // [Hz] ROS 2 param
+
+  double stamp_node_start_ = 0;
+  double stamp_last_obs_ = 0;
+  uint64_t obs_count_ = 0;
+  double diag_obs_rate_ = 0;  // smoothed obs rate [Hz]
+
+  void diag_callback(diagnostic_updater::DiagnosticStatusWrapper& stat);
 };
 }  // namespace mrpt_sensors

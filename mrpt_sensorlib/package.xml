@@ -17,6 +17,8 @@
   <depend>mrpt_libhwdrivers</depend>
   <depend>mrpt_libros_bridge</depend>
 
+  <depend>diagnostic_updater</depend>
+
   <!-- <depend>rclcpp</depend> -->
   <depend>rclcpp_components</depend>
   <!-- <depend>tf2</depend> -->
