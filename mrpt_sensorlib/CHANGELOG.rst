@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2026-05-20)
+------------------
 * feat(mrpt_sensorlib): retry on sensor exception instead of crashing
   When doProcess() throws (e.g. serial port unavailable at startup),
   catch the exception, report ERROR via /diagnostics, and retry after

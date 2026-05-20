@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_novatel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2026-05-20)
+------------------
 * Publish oem6 ros2 messages too
 * Add novatel_oem6_msgs package and service to send custom commands to Novatel
 * Fix param type errors

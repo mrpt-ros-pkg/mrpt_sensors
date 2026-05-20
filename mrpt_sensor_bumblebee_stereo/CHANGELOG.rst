@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_bumblebee_stereo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2026-05-20)
+------------------
 * remove obsolete dependencies
 * Contributors: Jose Luis Blanco-Claraco
 

@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2026-05-20)
+------------------
 * FIX: Don't throw if an invalid stamp arrives from the sensor
 * remove obsolete dependencies
 * Contributors: Jose Luis Blanco-Claraco
