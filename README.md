@@ -223,7 +223,7 @@ sudo apt install ros-${ROS_DISTRO}-mrpt-sensor-gnss-nmea
 ros2 launch mrpt_sensor_gnss_nmea mrpt_sensor_gnss_nmea.launch.py serial_port:=/dev/ttyACM0 publish_topic:="/gps"
 ```
 
-Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/reference/latest/class_mrpt_hwdrivers_CGPSInterface.html)):
+Parsed messages (via [mrpt::hwdrivers::CGPSInterface](https://docs.mrpt.org/reference/stable/class_mrpt_hwdrivers_CGPSInterface.html)):
 - NMEA_GGA
 - NMEA_GLL
 - NMEA_GSA
