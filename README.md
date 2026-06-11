@@ -7,7 +7,8 @@
 | ROS 2 Humble (u22.04) | [![Build Status](https://build.ros2.org/job/Hdev__mrpt_sensors__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Hdev__mrpt_sensors__ubuntu_jammy_amd64/) | [![Version](https://img.shields.io/ros/v/humble/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
 | ROS 2 Jazzy (u24.04) | [![Build Status](https://build.ros2.org/job/Jdev__mrpt_sensors__ubuntu_noble_amd64/badge/icon)](https://build.ros2.org/job/Jdev__mrpt_sensors__ubuntu_noble_amd64/) | [![Version](https://img.shields.io/ros/v/jazzy/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
 | ROS 2 Kilted (u24.04) | [![Build Status](https://build.ros2.org/job/Kdev__mrpt_sensors__ubuntu_noble_amd64/badge/icon)](https://build.ros2.org/job/Kdev__mrpt_sensors__ubuntu_noble_amd64/) | [![Version](https://img.shields.io/ros/v/kilted/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
-| ROS 2 Rolling (u24.04) | [![Build Status](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_noble_amd64/badge/icon)](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_noble_amd64/) | [![Version](https://img.shields.io/ros/v/rolling/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
+| ROS 2 Lyrical (u26.04) | [![Build Status](https://build.ros2.org/job/Ldev__mrpt_sensors__ubuntu_resolute_amd64/badge/icon)](https://build.ros2.org/job/Ldev__mrpt_sensors__ubuntu_resolute_amd64/) | [![Version](https://img.shields.io/ros/v/lyrical/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
+| ROS 2 Rolling (u26.04) | [![Build Status](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_resolute_amd64/badge/icon)](https://build.ros2.org/job/Rdev__mrpt_sensors__ubuntu_resolute_amd64/) | [![Version](https://img.shields.io/ros/v/rolling/mrpt_sensors)](https://index.ros.org/search/?term=mrpt_sensors) |
 
 | EOL Distro | Last release |
 | --- | --- |
