@@ -571,8 +571,8 @@ pose_y = ${SENSOR_POSE_Y}
 pose_z = ${SENSOR_POSE_Z}
 
 # Setup commands configuration
-setup_cmds_delay = 0.2
-setup_cmds_append_CRLF = true
+custom_cmds_delay = 0.2
+custom_cmds_append_CRLF = true
 
 # === INITIALIZATION SEQUENCE ===
 # Order matters! Configure before enabling INS.
