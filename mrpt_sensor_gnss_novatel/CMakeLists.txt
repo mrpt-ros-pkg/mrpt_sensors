@@ -12,8 +12,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(novatel_oem6_msgs REQUIRED)
 
 find_package(mrpt_msgs REQUIRED)
-find_package(mrpt-ros2bridge REQUIRED)
-find_package(mrpt-hwdrivers REQUIRED)
+find_package(mrpt_libros_bridge REQUIRED)
+find_package(mrpt_hwdrivers REQUIRED)
 
 ###########
 ## Build ##
@@ -27,8 +27,8 @@ target_link_libraries(
   rclcpp::rclcpp
   rclcpp_components::component
   mrpt_sensorlib::mrpt_sensorlib
-  mrpt::ros2bridge
-  mrpt::hwdrivers
+  mrpt_libros_bridge::mrpt_libros_bridge
+  mrpt::mrpt_hwdrivers
   mrpt_msgs::mrpt_msgs_library
   tf2::tf2
   tf2_ros::tf2_ros

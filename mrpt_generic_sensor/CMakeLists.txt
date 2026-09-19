@@ -13,8 +13,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 
 find_package(mrpt_msgs REQUIRED)
 
-find_package(mrpt-hwdrivers REQUIRED)
-find_package(mrpt-ros2bridge REQUIRED)
+find_package(mrpt_hwdrivers REQUIRED)
+find_package(mrpt_libros_bridge REQUIRED)
 
 message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
 
@@ -26,8 +26,8 @@ add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  mrpt::hwdrivers
-  mrpt::ros2bridge
+  mrpt::mrpt_hwdrivers
+  mrpt_libros_bridge::mrpt_libros_bridge
 )
 
 target_link_libraries(

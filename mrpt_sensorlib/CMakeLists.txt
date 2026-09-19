@@ -8,8 +8,8 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 find_package(mrpt_msgs REQUIRED)
-find_package(mrpt-ros2bridge REQUIRED)
-find_package(mrpt-hwdrivers REQUIRED)
+find_package(mrpt_libros_bridge REQUIRED)
+find_package(mrpt_hwdrivers REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 
 message(STATUS "MRPT_VERSION: ${mrpt-hwdrivers_VERSION}")
@@ -24,16 +24,20 @@ add_library(${PROJECT_NAME}
   include/mrpt_sensorlib/mrpt_sensorlib.h
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} BEFORE PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   PRIVATE src
 )
+# Force workspace mrpt_libros_bridge headers before system /opt/ros/jazzy ones:
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
+  ${mrpt_libros_bridge_INCLUDE_DIRS}
+)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
-  mrpt::hwdrivers
-  mrpt::ros2bridge
+  mrpt::mrpt_hwdrivers
+  mrpt_libros_bridge::mrpt_libros_bridge
 )
 
 
@@ -55,8 +59,8 @@ install(DIRECTORY include/${PROJECT_NAME}
 #############
 target_link_libraries(${PROJECT_NAME}
   rclcpp::rclcpp
-  mrpt::ros2bridge
-  mrpt::hwdrivers
+  mrpt_libros_bridge::mrpt_libros_bridge
+  mrpt::mrpt_hwdrivers
   mrpt_msgs::mrpt_msgs_library
   tf2_geometry_msgs::tf2_geometry_msgs
   tf2::tf2

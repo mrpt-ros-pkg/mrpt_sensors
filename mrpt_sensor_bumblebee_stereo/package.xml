@@ -23,7 +23,7 @@
   <depend>mrpt_msgs</depend>
   <depend>mrpt_sensorlib</depend>
 
-  <depend>mrpt_libhwdrivers</depend>
+  <depend>mrpt_hwdrivers</depend>
   <depend>mrpt_libros_bridge</depend>
 
 
