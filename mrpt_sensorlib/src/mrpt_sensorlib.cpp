@@ -63,7 +63,7 @@ namespace mrpt_sensors
 {
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
 {
-  tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+  tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
   stamp_node_start_ = mrpt::Clock::nowDouble();
 }
 
