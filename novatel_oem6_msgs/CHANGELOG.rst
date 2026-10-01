@@ -2,6 +2,9 @@
 Changelog for package novatel_oem6_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2026-05-20)
 ------------------
 * Publish oem6 ros2 messages too

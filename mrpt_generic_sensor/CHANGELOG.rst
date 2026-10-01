@@ -2,6 +2,12 @@
 Changelog for package mrpt_generic_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#13 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/13>`_ from mrpt-ros-pkg/mrpt3
+* Port to mrpt3: fix cmake targets, yaml API, and mrpt3 API changes
+* Contributors: Jose Luis Blanco-Claraco
+
 0.3.0 (2026-05-20)
 ------------------
 
