@@ -11,6 +11,7 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
     strategy:
+      fail-fast: false
       matrix:
         include:
           # Humble Hawksbill (May 2022 - May 2027)
