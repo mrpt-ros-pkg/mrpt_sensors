@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_novatel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2026-10-01)
+------------------
 * Merge pull request `#13 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/13>`_ from mrpt-ros-pkg/mrpt3
 * package.xml: rename mrpt_libhwdrivers dep to mrpt_hwdrivers
 * fix(novatel): use the config key names CGPSInterface actually reads
