@@ -47,6 +47,7 @@
 #include <mrpt/system/COutputLogger.h>
 
 #include <cmath>
+#include <cstring>
 #include <mutex>
 #include <novatel_oem6_msgs/msg/bestpos.hpp>
 #include <novatel_oem6_msgs/msg/detail/inscovs__struct.hpp>
@@ -286,6 +287,13 @@ struct NovatelPublishers
   rclcpp::Publisher<novatel_oem6_msgs::msg::RXSTATUS>::SharedPtr rxstatus;
 };
 
+// Fixed-size char fields (e.g. base station ID) are padded with NULs, which
+// are not valid inside a ROS string: keep only up to the first NUL.
+std::string fixedCharsToString(const char* s, size_t maxLen)
+{
+  return std::string(s, strnlen(s, maxLen));
+}
+
 template <typename T>
 void ensurePublisher(
     typename rclcpp::Publisher<T>::SharedPtr& pub, rclcpp::Node* node, const std::string& topic)
@@ -316,7 +324,7 @@ novatel_oem6_msgs::msg::BESTPOS convertBESTPOS(
   out.lat_sigma = msg.fields.lat_sigma;
   out.lon_sigma = msg.fields.lon_sigma;
   out.hgt_sigma = msg.fields.hgt_sigma;
-  out.base_station_id = std::string(msg.fields.base_station_id, 4);
+  out.base_station_id = fixedCharsToString(msg.fields.base_station_id, 4);
   out.diff_age = msg.fields.diff_age;
   out.sol_age = msg.fields.sol_age;
   out.num_sats_tracked = msg.fields.num_sats_tracked;
@@ -407,7 +415,7 @@ novatel_oem6_msgs::msg::MARKPOS convertMARKPOS(
   out.lat_sigma = msg.fields.lat_sigma;
   out.lon_sigma = msg.fields.lon_sigma;
   out.hgt_sigma = msg.fields.hgt_sigma;
-  out.base_station_id = std::string(msg.fields.base_station_id, 4);
+  out.base_station_id = fixedCharsToString(msg.fields.base_station_id, 4);
   out.diff_age = msg.fields.diff_age;
   out.sol_age = msg.fields.sol_age;
   out.num_sats_tracked = msg.fields.num_sats_tracked;
@@ -811,9 +819,8 @@ int main(int argc, char** argv)
         return;
       }
 
-      std_msgs::msg::Header msgHeader;
-      msgHeader.frame_id = node->sensor_frame_id();
-      msgHeader.stamp = mrpt::ros2bridge::toROS(obs->timestamp);
+      // create_header() falls back to the current time for invalid GNSS stamps:
+      const std_msgs::msg::Header msgHeader = node->create_header(*o);
 
       node->ensure_publisher_exists<sensor_msgs::msg::NavSatFix>(node->gps_publisher_);
 
@@ -952,10 +959,9 @@ int main(int argc, char** argv)
         }
       }
 
-      auto header = node->create_header(*o);
       auto msg = sensor_msgs::msg::NavSatFix();
 
-      bool valid = mrpt::ros2bridge::toROS(*o, header, msg);
+      bool valid = mrpt::ros2bridge::toROS(*o, msgHeader, msg);
       if (valid)
       {
         if (enu_sigmas.has_value())
