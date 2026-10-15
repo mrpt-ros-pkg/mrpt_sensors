@@ -268,6 +268,12 @@ void GenericSensorNode::run()
         break;
       }
 
+      // The context is no longer valid after CTRL+C:
+      if (!rclcpp::ok())
+      {
+        break;
+      }
+
       // Get new observations
       const mrpt::hwdrivers::CGenericSensor::TListObservations lstObjs = sensor->getObservations();
 
@@ -275,10 +281,22 @@ void GenericSensorNode::run()
       {
         auto obs = std::dynamic_pointer_cast<mrpt::obs::CObservation>(obj);
         ASSERT_(obs);
-        process_observation(obs);
+        // A malformed observation must not bring the whole node down:
+        try
+        {
+          process_observation(obs);
+        }
+        catch (const std::exception& e)
+        {
+          RCLCPP_ERROR_STREAM(this->get_logger(), "Exception processing observation: " << e.what());
+        }
       }
     }
 
+    if (!rclcpp::ok())
+    {
+      break;
+    }
     rclcpp::spin_some(this->get_node_base_interface());
 
     if (had_error)
