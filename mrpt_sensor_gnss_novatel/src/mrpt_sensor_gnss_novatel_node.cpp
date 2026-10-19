@@ -646,25 +646,26 @@ setup_cmd15 = INSCOMMAND ENABLE
 
 # === OUTPUT LOG CONFIGURATION ===
 
+# Only logs with a dedicated MRPT parser: others (e.g. BESTVELB, INSATTB) go
+# through the generic frame container, whose decoding is currently broken.
+
 # 13. Position logs (high rate for navigation)
 setup_cmd16 = LOG USB1 BESTPOSB ONTIME 0.05
-setup_cmd17 = LOG USB1 BESTVELB ONTIME 0.1
 
 # 14. INS solution (position + velocity + attitude)
-setup_cmd18 = LOG USB1 INSPVASB ONTIME 0.05
-setup_cmd19 = LOG USB1 INSATTB ONTIME 0.1
+setup_cmd17 = LOG USB1 INSPVASB ONTIME 0.05
 
 # 15. Raw measurements for post-processing and RTK
-setup_cmd20 = LOG USB1 RANGECMPB ONTIME 1
-setup_cmd21 = LOG USB1 RAWEPHEMB ONCHANGED
-setup_cmd22 = LOG USB1 IONUTCB ONCHANGED
+setup_cmd18 = LOG USB1 RANGECMPB ONTIME 1
+setup_cmd19 = LOG USB1 RAWEPHEMB ONCHANGED
+setup_cmd20 = LOG USB1 IONUTCB ONCHANGED
 
 # 16. Diagnostics and status
-setup_cmd23 = LOG USB1 VERSION ONCE
-setup_cmd24 = LOG USB1 RXSTATUSB ONTIME 10
+setup_cmd21 = LOG USB1 VERSION ONCE
+setup_cmd22 = LOG USB1 RXSTATUSB ONTIME 10
 
 # 17. GGA for NTRIP feedback
-setup_cmd25 = LOG USB1 GPGGARTK ONTIME 1
+setup_cmd23 = LOG USB1 GPGGARTK ONTIME 1
 
 # Shutdown
 shutdown_cmd1 = UNLOGALL
