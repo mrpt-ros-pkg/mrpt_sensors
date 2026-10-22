@@ -41,7 +41,7 @@ these conditions:
 | Status | Condition |
 |--------|-----------|
 | `WARN` | Node started but no observation has arrived yet within the startup timeout window |
-| `ERROR` | Sensor exception (e.g., serial port unavailable) - node keeps retrying every `retry_on_error_delay` seconds |
+| `ERROR` | Sensor exception (e.g., serial port unavailable) - node keeps retrying every `retry_on_error_delay` seconds, without blocking the other sensors of the node |
 | `ERROR` | Sensor was working but no observation has been received for longer than 3x the expected period |
 | `WARN` | Observation rate is below 50% of the configured expected rate |
 | `OK` | Observations are arriving at the expected rate |
@@ -296,13 +296,23 @@ Arguments (pass arguments as '<name>:=<value>'):
 # `mrpt_sensor_gnss_novatel`
 
 ROS node for GNSS/IMU Novatel receivers with RTK precision using an NTRIP HTTP source.
-This node actually launches two mrpt::hwdrivers sensors: 
+This node runs:
 
 - mrpt::hwdrivers::CGPSInterface for the Novatel GNSS/INS device, and
-- mrpt::hwdrivers::CNTRIPEmitter to connect to a remove NTRIP source and emit the received corrections via a serial port.
+- an NTRIP client (mrpt::hwdrivers::CNTRIPClient) in its own thread, which forwards the
+  RTCM corrections of a remote NTRIP caster to a second serial port of the receiver, and the
+  receiver GGA sentences back to the caster.
 
 Thus, you need to specify several mandatory ros launch arguments to make this node to work, 
 including the Novatel serial (USB) ports, the NTRIP server configuration, etc.
+
+Both links recover by themselves from temporary failures: the receiver serial ports are
+reopened after USB disconnections, and the caster connection is retried if the caster is not
+reachable at start up or after a link loss (no data for `ntrip_stream_timeout` seconds,
+e.g. after a WiFi or NAT change). Besides the common `Sensor status`, the node publishes an
+`NTRIP status` diagnostics entry (`ERROR` if not connected or the serial port is not open,
+`WARN` if no corrections arrive), with the data rate, connection count, last error and the
+correction age and base station ID reported by the receiver in BESTPOS.
 
 Supported models: Novatel OEM6
 
@@ -415,6 +425,18 @@ Arguments (pass arguments as '<name>:=<value>'):
     'ntrip_password':
         NTRIP server password.
         (default: '""')
+
+    'ntrip_stream_timeout':
+        Reconnect to the NTRIP caster if no data arrives for this long (seconds).
+        (default: '10.0')
+
+    'ntrip_reconnect_delay':
+        Seconds between attempts to connect to the caster or open the serial port.
+        (default: '5.0')
+
+    'ntrip_send_gga':
+        Send the receiver GGA sentences to the caster (needed by VRS mount points).
+        (default: 'true')
 
     'sensor_pose_x':
         Sensor pose coordinate on the vehicle frame.
