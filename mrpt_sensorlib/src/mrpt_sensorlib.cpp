@@ -43,6 +43,7 @@
 #include <mrpt/obs/CObservationIMU.h>
 #include <mrpt/serialization/CArchive.h>
 #include <mrpt/system/filesystem.h>
+#include <mrpt/system/string_utils.h>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
@@ -57,10 +58,22 @@
 #include <exception>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <thread>
 
 namespace mrpt_sensors
 {
+std::string short_error_message(const std::string& what)
+{
+  const std::string tag = "Message:";
+  size_t start = what.find(tag);
+  start = (start == std::string::npos) ? 0 : start + tag.size();
+  size_t end = what.find('\n', start);
+  if (end == std::string::npos)
+  {
+    end = what.size();
+  }
+  return mrpt::system::trim(what.substr(start, end - start));
+}
+
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
 {
   tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
@@ -196,12 +209,22 @@ void GenericSensorNode::init(
       }
 
       sensors_.push_back(sensor);
+      sensors_state_.emplace_back();
 
       // Load common & sensor-specific parameters:
       sensor->loadConfig(config, section);
 
-      // Initialize sensor:
-      sensor->initialize();
+      // Initialize sensor. A device not available yet (e.g. unplugged) must
+      // not prevent the other sensors from starting: run() will retry.
+      try
+      {
+        sensor->initialize();
+        sensors_state_.back().initialized = true;
+      }
+      catch (const std::exception& e)
+      {
+        on_sensor_error(sensors_.size() - 1, e.what());
+      }
 
       // Custom init:
       if (init_sensor_specific) init_sensor_specific();
@@ -249,23 +272,38 @@ void GenericSensorNode::run()
   rclcpp::Rate loop_rate(rate);
   while (rclcpp::ok())
   {
-    bool had_error = false;
-    for (auto& sensor : sensors_)
+    for (size_t i = 0; i < sensors_.size() && rclcpp::ok(); i++)
     {
+      auto& sensor = sensors_.at(i);
+      auto& state = sensors_state_.at(i);
+
+      // Sensors in error are left alone until their retry time:
+      if (!state.last_error.empty() && mrpt::Clock::nowDouble() < state.next_retry_stamp)
+      {
+        continue;
+      }
+
       try
       {
+        if (!state.initialized)
+        {
+          sensor->initialize();
+          state.initialized = true;
+        }
         sensor->doProcess();
       }
       catch (const std::exception& e)
       {
-        had_error = true;
-        sensor_last_error_ = e.what();
-        RCLCPP_ERROR_STREAM(
-            this->get_logger(), "Exception in sensor doProcess(): " << e.what() << "\nRetrying in "
-                                                                    << retry_on_error_delay_
-                                                                    << " s...");
+        on_sensor_error(i, e.what());
+        continue;
+      }
+
+      if (!state.last_error.empty())
+      {
+        RCLCPP_INFO_STREAM(
+            this->get_logger(), "Sensor '" << sensor->getSensorLabel() << "' recovered.");
+        state.last_error.clear();
         diag_updater_.force_update();
-        break;
       }
 
       // The context is no longer valid after CTRL+C:
@@ -298,22 +336,21 @@ void GenericSensorNode::run()
       break;
     }
     rclcpp::spin_some(this->get_node_base_interface());
-
-    if (had_error)
-    {
-      const double t0 = mrpt::Clock::nowDouble();
-      while (rclcpp::ok() && mrpt::Clock::nowDouble() - t0 < retry_on_error_delay_)
-      {
-        rclcpp::spin_some(this->get_node_base_interface());
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
-    }
-    else
-    {
-      sensor_last_error_.clear();
-      loop_rate.sleep();
-    }
+    loop_rate.sleep();
   }
+}
+
+void GenericSensorNode::on_sensor_error(size_t index, const std::string& what)
+{
+  auto& state = sensors_state_.at(index);
+  state.last_error = short_error_message(what);
+  state.next_retry_stamp = mrpt::Clock::nowDouble() + retry_on_error_delay_;
+
+  RCLCPP_ERROR_STREAM(
+      this->get_logger(), "Error in sensor '" << sensors_.at(index)->getSensorLabel()
+                                              << "': " << what << "\nRetrying in "
+                                              << retry_on_error_delay_ << " s...");
+  diag_updater_.force_update();
 }
 
 void GenericSensorNode::process_observation(const mrpt::obs::CObservation::Ptr& o)
@@ -462,11 +499,25 @@ void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrappe
   const double tNow = mrpt::Clock::nowDouble();
   const double elapsed = tNow - stamp_node_start_;
 
-  if (!sensor_last_error_.empty())
+  std::string errors;
+  for (size_t i = 0; i < sensors_state_.size(); i++)
+  {
+    if (sensors_state_[i].last_error.empty())
+    {
+      continue;
+    }
+    if (!errors.empty())
+    {
+      errors += " | ";
+    }
+    errors += "[" + sensors_.at(i)->getSensorLabel() + "] " + sensors_state_[i].last_error;
+  }
+
+  if (!errors.empty())
   {
     stat.summaryf(
         diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Sensor error (retrying every %.1f s): %s",
-        retry_on_error_delay_, sensor_last_error_.c_str());
+        retry_on_error_delay_, errors.c_str());
   }
   else if (obs_count_ == 0)
   {

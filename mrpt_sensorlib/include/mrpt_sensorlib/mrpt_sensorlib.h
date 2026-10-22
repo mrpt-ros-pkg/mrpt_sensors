@@ -62,6 +62,10 @@
 
 namespace mrpt_sensors
 {
+/// Returns the one-line message of an exception text, without the MRPT
+/// exception banner nor the call stack, for logs and diagnostics.
+std::string short_error_message(const std::string& what);
+
 class GenericSensorNode : public rclcpp::Node
 {
  public:
@@ -143,6 +147,9 @@ class GenericSensorNode : public rclcpp::Node
     return dynamic_cast<T*>(sensors_[index].get());
   }
 
+  /// The diagnostics updater of this node, to add sensor-specific tasks.
+  diagnostic_updater::Updater& diagnostics() { return diag_updater_; }
+
  private:
   // ----------------- ROS 2 params -----------------
   std::string out_rawlog_prefix_;
@@ -159,6 +166,16 @@ class GenericSensorNode : public rclcpp::Node
   // -----------------------------------------------
 
   std::vector<mrpt::hwdrivers::CGenericSensor::Ptr> sensors_;
+
+  /// Error and retry state of each entry in sensors_, so a failing sensor
+  /// does not stop the others.
+  struct SensorRunState
+  {
+    bool initialized = false;
+    std::string last_error;  //!< non-empty while in retry-after-error state
+    double next_retry_stamp = 0;
+  };
+  std::vector<SensorRunState> sensors_state_;
 
   double stamp_last_tf_publish_ = 0;
 
@@ -179,7 +196,8 @@ class GenericSensorNode : public rclcpp::Node
   double stamp_last_obs_ = 0;
   uint64_t obs_count_ = 0;
   double diag_obs_rate_ = 0;  // smoothed obs rate [Hz]
-  std::string sensor_last_error_;  // non-empty while in retry-after-error state
+
+  void on_sensor_error(size_t index, const std::string& what);
 
   void diag_callback(diagnostic_updater::DiagnosticStatusWrapper& stat);
 };
