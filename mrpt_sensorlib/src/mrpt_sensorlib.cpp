@@ -68,7 +68,11 @@ std::string short_error_message(const std::string& what)
   if (const size_t pos = what.find(tag); pos != std::string::npos)
   {
     const size_t start = pos + tag.size();
-    return mrpt::system::trim(what.substr(start, what.find('\n', start) - start));
+    const std::string msg = mrpt::system::trim(what.substr(start, what.find('\n', start) - start));
+    if (!msg.empty())
+    {
+      return msg;
+    }
   }
 
   // Otherwise, the first line other than the MRPT exception banner:
@@ -76,12 +80,14 @@ std::string short_error_message(const std::string& what)
   for (std::string line; std::getline(lines, line);)
   {
     line = mrpt::system::trim(line);
-    if (!line.empty() && line.rfind("====", 0) != 0)
+    if (!line.empty() && line.rfind("====", 0) != 0 && line != tag)
     {
       return line;
     }
   }
-  return mrpt::system::trim(what);
+
+  // Never empty, since an empty error means "no error" to the callers:
+  return "Unknown error";
 }
 
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
@@ -353,12 +359,24 @@ void GenericSensorNode::run()
 void GenericSensorNode::on_sensor_error(size_t index, const std::string& what)
 {
   auto& state = sensors_state_.at(index);
-  state.last_error = short_error_message(what);
+  const std::string shortMsg = short_error_message(what);
+  const bool isRepeated = (shortMsg == state.last_error);
+  state.last_error = shortMsg;
   state.next_retry_stamp = mrpt::Clock::nowDouble() + retry_on_error_delay_;
+
+  // Full details (e.g. backtraces) only once; a single line while it persists:
+  if (isRepeated)
+  {
+    RCLCPP_ERROR_STREAM(
+        this->get_logger(), "Sensor '" << sensors_.at(index)->getSensorLabel()
+                                       << "' still failing: " << shortMsg << " (retrying in "
+                                       << retry_on_error_delay_ << " s)");
+    return;
+  }
 
   RCLCPP_ERROR_STREAM(
       this->get_logger(), "Error in sensor '" << sensors_.at(index)->getSensorLabel()
-                                              << "': " << what << "\nRetrying in "
+                                              << "': " << what << "\nRetrying every "
                                               << retry_on_error_delay_ << " s...");
   diag_updater_.force_update();
 }
