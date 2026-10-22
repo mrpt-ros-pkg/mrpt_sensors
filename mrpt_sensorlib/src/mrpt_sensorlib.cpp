@@ -68,7 +68,11 @@ std::string short_error_message(const std::string& what)
   if (const size_t pos = what.find(tag); pos != std::string::npos)
   {
     const size_t start = pos + tag.size();
-    return mrpt::system::trim(what.substr(start, what.find('\n', start) - start));
+    const std::string msg = mrpt::system::trim(what.substr(start, what.find('\n', start) - start));
+    if (!msg.empty())
+    {
+      return msg;
+    }
   }
 
   // Otherwise, the first line other than the MRPT exception banner:
@@ -76,12 +80,14 @@ std::string short_error_message(const std::string& what)
   for (std::string line; std::getline(lines, line);)
   {
     line = mrpt::system::trim(line);
-    if (!line.empty() && line.rfind("====", 0) != 0)
+    if (!line.empty() && line.rfind("====", 0) != 0 && line != tag)
     {
       return line;
     }
   }
-  return mrpt::system::trim(what);
+
+  // Never empty, since an empty error means "no error" to the callers:
+  return "Unknown error";
 }
 
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
