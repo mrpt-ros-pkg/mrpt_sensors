@@ -57,6 +57,7 @@
 
 #include <exception>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <sstream>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 namespace mrpt_sensors
@@ -64,14 +65,23 @@ namespace mrpt_sensors
 std::string short_error_message(const std::string& what)
 {
   const std::string tag = "Message:";
-  size_t start = what.find(tag);
-  start = (start == std::string::npos) ? 0 : start + tag.size();
-  size_t end = what.find('\n', start);
-  if (end == std::string::npos)
+  if (const size_t pos = what.find(tag); pos != std::string::npos)
   {
-    end = what.size();
+    const size_t start = pos + tag.size();
+    return mrpt::system::trim(what.substr(start, what.find('\n', start) - start));
   }
-  return mrpt::system::trim(what.substr(start, end - start));
+
+  // Otherwise, the first line other than the MRPT exception banner:
+  std::istringstream lines(what);
+  for (std::string line; std::getline(lines, line);)
+  {
+    line = mrpt::system::trim(line);
+    if (!line.empty() && line.rfind("====", 0) != 0)
+    {
+      return line;
+    }
+  }
+  return mrpt::system::trim(what);
 }
 
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)

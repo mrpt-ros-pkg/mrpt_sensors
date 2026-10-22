@@ -1085,8 +1085,20 @@ int main(int argc, char** argv)
         node->declare_parameter<std::string>("ntrip_mount_point", "ALME00ESP0");
     ntrip_params.caster.user = node->declare_parameter<std::string>("ntrip_user", "");
     ntrip_params.caster.password = node->declare_parameter<std::string>("ntrip_password", "");
-    ntrip_params.stream_timeout = node->declare_parameter("ntrip_stream_timeout", 10.0);
-    ntrip_params.reconnect_delay = node->declare_parameter("ntrip_reconnect_delay", 5.0);
+    // Accept both "10" and "10.0" for times in seconds:
+    const auto declare_seconds = [&node](const std::string& name, double defaultValue)
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.dynamic_typing = true;
+      const auto& v = node->declare_parameter(name, rclcpp::ParameterValue(defaultValue), desc);
+      if (v.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+      {
+        return static_cast<double>(v.get<int64_t>());
+      }
+      return v.get<double>();
+    };
+    ntrip_params.stream_timeout = declare_seconds("ntrip_stream_timeout", 10.0);
+    ntrip_params.reconnect_delay = declare_seconds("ntrip_reconnect_delay", 5.0);
     ntrip_params.send_gga = node->declare_parameter("ntrip_send_gga", true);
 
     std::unique_ptr<mrpt_sensors::NtripForwarder> ntrip;
