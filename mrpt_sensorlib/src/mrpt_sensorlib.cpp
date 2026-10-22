@@ -353,12 +353,24 @@ void GenericSensorNode::run()
 void GenericSensorNode::on_sensor_error(size_t index, const std::string& what)
 {
   auto& state = sensors_state_.at(index);
-  state.last_error = short_error_message(what);
+  const std::string shortMsg = short_error_message(what);
+  const bool isRepeated = (shortMsg == state.last_error);
+  state.last_error = shortMsg;
   state.next_retry_stamp = mrpt::Clock::nowDouble() + retry_on_error_delay_;
+
+  // Full details (e.g. backtraces) only once; a single line while it persists:
+  if (isRepeated)
+  {
+    RCLCPP_ERROR_STREAM(
+        this->get_logger(), "Sensor '" << sensors_.at(index)->getSensorLabel()
+                                       << "' still failing: " << shortMsg << " (retrying in "
+                                       << retry_on_error_delay_ << " s)");
+    return;
+  }
 
   RCLCPP_ERROR_STREAM(
       this->get_logger(), "Error in sensor '" << sensors_.at(index)->getSensorLabel()
-                                              << "': " << what << "\nRetrying in "
+                                              << "': " << what << "\nRetrying every "
                                               << retry_on_error_delay_ << " s...");
   diag_updater_.force_update();
 }
