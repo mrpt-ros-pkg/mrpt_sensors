@@ -20,7 +20,10 @@ find_package(mrpt_hwdrivers REQUIRED)
 ###########
 
 ## Declare a cpp executable
-add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
+add_executable(${PROJECT_NAME}_node
+  src/${PROJECT_NAME}_node.cpp
+  src/NtripForwarder.cpp
+)
 
 target_link_libraries(
   ${PROJECT_NAME}_node

@@ -67,7 +67,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'novatel_ntrip_serial_port',
             default_value='',
-            description='Novatel port for NTRIP corrections (USB3 typically). REQUIRED.'
+            description='Novatel port for NTRIP corrections (USB3 typically). '
+                        'Empty disables the NTRIP corrections.'
         ),
         DeclareLaunchArgument(
             'serial_baud_rate',
@@ -170,6 +171,21 @@ def generate_launch_description():
             default_value='""',
             description='NTRIP server password.'
         ),
+        DeclareLaunchArgument(
+            'ntrip_stream_timeout',
+            default_value='10.0',
+            description='Reconnect to the NTRIP caster if no data arrives for this long (seconds).'
+        ),
+        DeclareLaunchArgument(
+            'ntrip_reconnect_delay',
+            default_value='5.0',
+            description='Seconds between attempts to connect to the caster or open the serial port.'
+        ),
+        DeclareLaunchArgument(
+            'ntrip_send_gga',
+            default_value='true',
+            description='Send the receiver GGA sentences to the caster (needed by VRS mount points).'
+        ),
 
         # SENSOR POSE:
         # --------------------------------------------
@@ -255,6 +271,11 @@ def generate_launch_description():
                     'ntrip_mount_point')},
                 {'ntrip_user': LaunchConfiguration('ntrip_user')},
                 {'ntrip_password': LaunchConfiguration('ntrip_password')},
+                {'ntrip_stream_timeout': LaunchConfiguration(
+                    'ntrip_stream_timeout')},
+                {'ntrip_reconnect_delay': LaunchConfiguration(
+                    'ntrip_reconnect_delay')},
+                {'ntrip_send_gga': LaunchConfiguration('ntrip_send_gga')},
 
                 # Sensor pose:
                 {'sensor_pose_x': LaunchConfiguration('sensor_pose_x')},
