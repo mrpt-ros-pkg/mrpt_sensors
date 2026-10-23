@@ -90,6 +90,12 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
+            'stamp_with_receive_time',
+            default_value='false',
+            description='Stamp messages with the local reception time instead of the receiver UTC time.'
+        ),
+
+        DeclareLaunchArgument(
             "log_level",
             default_value=TextSubstitution(text=str("INFO")),
             description="Logging level"
@@ -126,6 +132,9 @@ def generate_launch_description():
                 {'sensor_pose_x': LaunchConfiguration('sensor_pose_x')},
                 {'sensor_pose_y': LaunchConfiguration('sensor_pose_y')},
                 {'sensor_pose_z': LaunchConfiguration('sensor_pose_z')},
+
+                {'stamp_with_receive_time': LaunchConfiguration(
+                    'stamp_with_receive_time')},
             ]
         )
     ])
