@@ -96,6 +96,11 @@ namespace
 double HDOP = 5.0;
 double VDOP = 5.0;
 
+// If true, stamp messages with the local reception time instead of the
+// receiver UTC time, which may be off by whole seconds (e.g. outdated leap
+// seconds after a cold start).
+bool stamp_with_receive_time = false;
+
 // 1 sigma of the User Range Error (approximate)
 // See:
 // https://en.wikipedia.org/wiki/Error_analysis_for_the_Global_Positioning_System
@@ -150,6 +155,11 @@ void process_gps(mrpt_sensors::GenericSensorNode& node, const mrpt::obs::CObserv
 {
   auto o = std::dynamic_pointer_cast<mrpt::obs::CObservationGPS>(obs);
   ASSERT_(o);
+
+  if (stamp_with_receive_time && o->originalReceivedTimestamp != INVALID_TIMESTAMP)
+  {
+    o->timestamp = o->originalReceivedTimestamp;
+  }
 
   auto& pubs = NMEA_Pubs::Instance();
 
@@ -332,6 +342,9 @@ int main(int argc, char** argv)
     rclcpp::init(argc, argv);
 
     auto node = std::make_shared<mrpt_sensors::GenericSensorNode>(node_name);
+
+    stamp_with_receive_time =
+        node->declare_parameter<bool>("stamp_with_receive_time", stamp_with_receive_time);
 
     node->custom_process_sensor = [&node](const mrpt::obs::CObservation::Ptr& o)
     { process_gps(*node, o); };

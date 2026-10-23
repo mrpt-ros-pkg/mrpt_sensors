@@ -286,6 +286,10 @@ Arguments (pass arguments as '<name>:=<value>'):
         Sensor pose coordinate on the vehicle frame.
         (default: '"0.0"')
 
+    'stamp_with_receive_time':
+        Stamp messages with the local reception time instead of the receiver UTC time.
+        (default: 'false')
+
     'log_level':
         Logging level
         (default: 'INFO')
