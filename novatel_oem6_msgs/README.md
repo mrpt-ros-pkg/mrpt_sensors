@@ -16,6 +16,7 @@ All messages defined in `gnss_messages_novatel.h` with `GNSS_BINARY_MSG_DEFINITI
 | **MARK2TIME** | Time at mark 2 event | week, week_seconds, clock_offset |
 | **IONUTC** | Ionosphere/UTC params | alpha/beta coefficients, leap seconds |
 | **RAWEPHEM** | Raw GPS ephemeris | subframe1[30], subframe2[30], subframe3[30] |
+| **RANGECMP** | Per-signal tracking (decoded) | obs[]: system, prn, signal_type, cno, lock_time, pseudorange, doppler |
 | **RXSTATUS** | Receiver status | error codes, status words |
 
 ### Message Features

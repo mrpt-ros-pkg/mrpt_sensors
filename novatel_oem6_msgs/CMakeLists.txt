@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/MARK2TIME.msg
   msg/MARKPOS.msg
   msg/MARKTIME.msg
+  msg/RangeObs.msg
+  msg/RANGECMP.msg
   msg/RAWEPHEM.msg
   msg/RAWIMUS.msg
   msg/RXSTATUS.msg
