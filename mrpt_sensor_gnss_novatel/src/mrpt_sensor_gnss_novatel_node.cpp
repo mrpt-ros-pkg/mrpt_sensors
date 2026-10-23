@@ -68,6 +68,7 @@
 #include <novatel_oem6_msgs/msg/mark2_time.hpp>
 #include <novatel_oem6_msgs/msg/markpos.hpp>
 #include <novatel_oem6_msgs/msg/marktime.hpp>
+#include <novatel_oem6_msgs/msg/rangecmp.hpp>
 #include <novatel_oem6_msgs/msg/rawephem.hpp>
 #include <novatel_oem6_msgs/msg/rawimus.hpp>
 #include <novatel_oem6_msgs/msg/rxstatus.hpp>
@@ -294,6 +295,7 @@ struct NovatelPublishers
   rclcpp::Publisher<novatel_oem6_msgs::msg::MARK2TIME>::SharedPtr mark2time;
   rclcpp::Publisher<novatel_oem6_msgs::msg::IONUTC>::SharedPtr ionutc;
   rclcpp::Publisher<novatel_oem6_msgs::msg::RAWEPHEM>::SharedPtr rawephem;
+  rclcpp::Publisher<novatel_oem6_msgs::msg::RANGECMP>::SharedPtr rangecmp;
   rclcpp::Publisher<novatel_oem6_msgs::msg::RXSTATUS>::SharedPtr rxstatus;
 };
 
@@ -515,6 +517,63 @@ novatel_oem6_msgs::msg::RAWEPHEM convertRAWEPHEM(
       std::begin(msg.fields.subframe2), std::end(msg.fields.subframe2), out.subframe2.begin());
   std::copy(
       std::begin(msg.fields.subframe3), std::end(msg.fields.subframe3), out.subframe3.begin());
+
+  return out;
+}
+
+// Reads n bytes (n <= 8) as a little-endian unsigned integer.
+uint64_t readLittleEndian(const uint8_t* p, size_t n)
+{
+  uint64_t v = 0;
+  for (size_t i = 0; i < n; i++)
+  {
+    v |= static_cast<uint64_t>(p[i]) << (8 * i);
+  }
+  return v;
+}
+
+// Sign-extends the lowest `bits` bits of `v`.
+int64_t signExtend(uint64_t v, unsigned int bits)
+{
+  const uint64_t m = uint64_t(1) << (bits - 1);
+  v &= (uint64_t(1) << bits) - 1;
+  return static_cast<int64_t>((v ^ m) - m);
+}
+
+novatel_oem6_msgs::msg::RANGECMP convertRANGECMP(
+    const mrpt::obs::gnss::Message_NV_OEM6_RANGECMP& msg, const std_msgs::msg::Header& header)
+{
+  // Pseudorange standard deviation [m] for each 4-bit code
+  constexpr float psrStdTable[16] = {0.050f, 0.075f, 0.113f, 0.169f, 0.253f, 0.380f,
+                                     0.570f, 0.854f, 1.281f, 2.375f, 4.750f, 9.500f,
+                                     19.0f,  38.0f,  76.0f,  152.0f};
+
+  novatel_oem6_msgs::msg::RANGECMP out;
+  out.header = header;
+  out.obs.reserve(msg.obs_data.size());
+
+  for (const auto& rec : msg.obs_data)
+  {
+    const uint8_t* d = rec.data;
+    const auto status = static_cast<uint32_t>(readLittleEndian(d, 4));
+    const uint64_t dopPsr = readLittleEndian(d + 4, 8);
+    const uint64_t lockCno = readLittleEndian(d + 18, 6);
+
+    novatel_oem6_msgs::msg::RangeObs o;
+    o.tracking_status = status;
+    o.phase_locked = (status & (1u << 10)) != 0;
+    o.code_locked = (status & (1u << 12)) != 0;
+    o.system = static_cast<uint8_t>((status >> 16) & 0x07);
+    o.signal_type = static_cast<uint8_t>((status >> 21) & 0x1F);
+    o.doppler = static_cast<double>(signExtend(dopPsr, 28)) / 256.0;
+    o.pseudorange = static_cast<double>(dopPsr >> 28) / 128.0;
+    o.pseudorange_std = psrStdTable[d[16] & 0x0F];
+    o.prn = d[17];
+    o.lock_time = static_cast<float>(lockCno & 0x1FFFFF) / 32.0f;
+    o.cno = 20.0f + static_cast<float>((lockCno >> 21) & 0x1F);
+    o.glonass_freq = static_cast<uint8_t>((lockCno >> 26) & 0x3F);
+    out.obs.push_back(o);
+  }
 
   return out;
 }
@@ -968,6 +1027,19 @@ int main(int argc, char** argv)
         ensurePublisher<novatel_oem6_msgs::msg::RAWEPHEM>(
             nvt_pubs.rawephem, node.get(), "~/novatel/rawephem");
         nvt_pubs.rawephem->publish(convertRAWEPHEM(msg, msgHeader));
+      }
+
+      // RANGECMP has no static msg_type, so getMsgByClass() cannot be used:
+      if (o->hasMsgType(mrpt::obs::gnss::NV_OEM6_RANGECMP))
+      {
+        const auto* msg = dynamic_cast<const mrpt::obs::gnss::Message_NV_OEM6_RANGECMP*>(
+            o->getMsgByType(mrpt::obs::gnss::NV_OEM6_RANGECMP));
+        if (msg)
+        {
+          ensurePublisher<novatel_oem6_msgs::msg::RANGECMP>(
+              nvt_pubs.rangecmp, node.get(), "~/novatel/rangecmp");
+          nvt_pubs.rangecmp->publish(convertRANGECMP(*msg, msgHeader));
+        }
       }
 
       if (o->hasMsgClass<mrpt::obs::gnss::Message_NV_OEM6_RXSTATUS>())
