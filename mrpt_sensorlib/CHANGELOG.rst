@@ -2,6 +2,48 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#20 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/20>`_ from mrpt-ros-pkg/fix/shorter-sensor-error-logs
+  mrpt_sensorlib: log full sensor errors once, one line while they persist
+* short_error_message(): never return an empty message
+  An empty message means no error to the callers, so it would skip the error
+  handling and the retry delay.
+* mrpt_sensorlib: log full sensor errors once, one line while they persist
+  A sensor that keeps failing (e.g. an unplugged serial port) was logging the
+  whole MRPT exception, with its backtrace, on every retry. Now the full text is
+  logged when an error first appears or changes, and a single line on each
+  retry while the same error persists.
+* Merge pull request `#19 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/19>`_ from mrpt-ros-pkg/fix/novatel-ntrip-robustness
+  Novatel: robust NTRIP corrections, per-sensor retries and NTRIP diagnostics
+* Accept integer NTRIP time parameters; better one-line error messages
+  - ntrip_stream_timeout and ntrip_reconnect_delay accept both integer and
+  floating point values.
+  - short_error_message(): without a 'Message:' tag, use the first line
+  other than the MRPT exception banner.
+* mrpt_sensorlib: retry each failing sensor on its own
+  - A sensor whose initialize() fails (e.g. device not plugged in yet) no
+  longer aborts the initialization of the following sensors: run()
+  retries it every retry_on_error_delay seconds.
+  - An error in one sensor no longer blocks the processing of the others
+  during the retry delay.
+  - Diagnostics report the failing sensor label and a one-line error.
+  - Expose the diagnostics updater, for sensor-specific tasks.
+* Merge pull request `#16 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/16>`_ from mrpt-ros-pkg/fix/novatel-base-station-id-nulls
+  Novatel: fix crash publishing BESTPOS/MARKPOS without a base station
+* Novatel: fix crash publishing BESTPOS/MARKPOS without a base station
+  The 4-char base_station_id was copied including its NUL padding, and
+  Fast-CDR refuses to serialize strings with embedded NULs: publish() threw,
+  the exception escaped run() and the node died (SIGSEGV while unwinding).
+  - Novatel: keep only up to the first NUL of fixed-size char fields.
+  - Novatel: build the header with create_header(), which falls back to the
+  current time for invalid GNSS stamps (as the NMEA node already does).
+  - sensorlib: an exception while processing one observation is logged
+  instead of killing the node.
+  - sensorlib: stop the loop when the ROS context is shut down, so CTRL+C
+  does not end with 'context is not valid' errors.
+* Contributors: Jose Luis Blanco-Claraco
+
 0.4.0 (2026-10-01)
 ------------------
 * Merge pull request `#14 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/14>`_ from mjcarroll/fix-tf2-node-interfaces

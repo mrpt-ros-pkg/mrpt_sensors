@@ -2,6 +2,9 @@
 Changelog for package mrpt_generic_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.0 (2026-10-01)
 ------------------
 * Merge pull request `#13 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/13>`_ from mrpt-ros-pkg/mrpt3
