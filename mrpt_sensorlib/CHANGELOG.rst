@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2026-10-27)
+------------------
 * Merge pull request `#20 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/20>`_ from mrpt-ros-pkg/fix/shorter-sensor-error-logs
   mrpt_sensorlib: log full sensor errors once, one line while they persist
 * short_error_message(): never return an empty message

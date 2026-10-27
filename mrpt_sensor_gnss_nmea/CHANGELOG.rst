@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2026-10-27)
+------------------
 * Merge pull request `#21 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/21>`_ from mrpt-ros-pkg/feat/nmea-stamp-with-receive-time
   mrpt_sensor_gnss_nmea: optional stamp_with_receive_time parameter
 * mrpt_sensor_gnss_nmea: optional stamp_with_receive_time parameter

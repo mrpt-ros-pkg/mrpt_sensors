@@ -2,8 +2,8 @@
 Changelog for package novatel_oem6_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2026-10-27)
+------------------
 * Merge pull request `#22 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/22>`_ from mrpt-ros-pkg/feat/novatel-rangecmp
   Novatel: publish per-signal tracking status (decoded RANGECMP)
 * Novatel: publish per-signal tracking status (decoded RANGECMP) on ~/novatel/rangecmp
