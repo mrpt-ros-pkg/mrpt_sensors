@@ -917,7 +917,25 @@ int main(int argc, char** argv)
         node->get_parameter("external_imu_azimuth_deg_for_yaw_zero").as_double();
     state.approx_time_from_system_clock =
         node->get_parameter("approx_time_from_system_clock").as_bool();
-    state.approx_position = node->get_parameter("approx_position").as_string();
+    const std::string approx_pos_str = node->get_parameter("approx_position").as_string();
+    if (!approx_pos_str.empty())
+    {
+      // Parse and re-format the numbers, so no arbitrary text reaches the receiver
+      double lat = 0;
+      double lon = 0;
+      double height = 0;
+      char trailing = 0;
+      if (sscanf(approx_pos_str.c_str(), "%lf %lf %lf %c", &lat, &lon, &height, &trailing) == 3)
+      {
+        state.approx_position = mrpt::format("%.9f %.9f %.3f", lat, lon, height);
+      }
+      else
+      {
+        RCLCPP_ERROR(
+            logger, "Invalid 'approx_position' (expected 'lat_deg lon_deg height_m'): '%s'",
+            approx_pos_str.c_str());
+      }
+    }
     state.ins_positions_before_gnss_fix =
         node->get_parameter("ins_positions_before_gnss_fix").as_bool();
 
