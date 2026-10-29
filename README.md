@@ -321,6 +321,14 @@ e.g. after a WiFi or NAT change). Besides the common `Sensor status`, the node p
 `WARN` if no corrections arrive), with the data rate, connection count, last error and the
 correction age and base station ID reported by the receiver in BESTPOS.
 
+Startup aiding, for a faster first fix after a cold start: with
+`approx_time_from_system_clock:=true` the node sends `SETAPPROXTIME` from the system clock
+while the receiver does not know the time, and with `approx_position:="lat lon height"`,
+`SETAPPROXPOS` while it has no position, once each. With SPAN, the INS also takes that
+position as its initial one and propagates it (`PROPAGATED`) with no GNSS at all, so
+positions published before the first GNSS solution since startup are marked `NO_FIX`
+(`ins_positions_before_gnss_fix:=true` publishes them as before).
+
 Supported models: Novatel OEM6
 
 ```bash
@@ -412,6 +420,18 @@ Arguments (pass arguments as '<name>:=<value>'):
     'novatel_init_azimuth':
         See Novatel docs for SETINITAZIMUTH.
         (default: '"0.000000 25.000000"')
+
+    'approx_time_from_system_clock':
+        If true, send SETAPPROXTIME from the system clock while the receiver does not know the time (faster first fix).
+        (default: 'false')
+
+    'approx_position':
+        If not empty, "lat_deg lon_deg height_m" sent as SETAPPROXPOS while the receiver has no position (faster first fix). With SPAN, the INS also takes it as its initial position.
+        (default: '')
+
+    'ins_positions_before_gnss_fix':
+        If false, positions published before the first GNSS solution since startup (e.g. the INS propagating an approximate position) are marked NO_FIX.
+        (default: 'false')
 
     'ntrip_server':
         DNS or IP of the NTRIP server.

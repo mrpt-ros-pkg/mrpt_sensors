@@ -163,6 +163,17 @@ struct NovatelNodeState
   double manual_init_azimuth_deg = 0.0;
   double manual_init_azimuth_std_deg = 10.0;
 
+  // Startup aiding, each sent once when the receiver still lacks it:
+  bool approx_time_from_system_clock = false;
+  std::string approx_position;  // "lat_deg lon_deg height_m", empty: disabled
+  bool approx_time_sent = false;
+  bool approx_position_sent = false;
+
+  // Positions with no GNSS solution since startup (e.g. the INS propagating an
+  // approximate position) are published as NO_FIX, unless this is true:
+  bool ins_positions_before_gnss_fix = false;
+  bool had_gnss_solution = false;
+
   // Use of the corrections by the receiver, from the latest BESTPOS:
   double bestpos_stamp = 0;  // [s, wall clock] 0 if none yet
   uint32_t position_type = 0;
@@ -203,6 +214,77 @@ double quaternionToAzimuthDeg(
   }
 
   return azimuth;
+}
+
+// Novatel OEM6 time status (firmware reference, table 9): values below
+// APPROXIMATE mean the receiver does not know the time yet.
+constexpr uint8_t NV_TIME_STATUS_APPROXIMATE = 60;
+
+// Whether a BESTPOS position type comes from a GNSS solution (not from a fixed
+// or approximate position, nor from the INS alone):
+bool isGnssPositionType(uint32_t position_type)
+{
+  using namespace mrpt::obs::gnss::nv_oem6_position_type;
+  switch (position_type)
+  {
+    case NONE:
+    case FIXEDPOS:
+    case FIXEDHEIGHT:
+    case DOPPLER_VELOCITY:
+    case PROPAGATED:
+    case INS:
+      return false;
+    default:
+      return true;
+  }
+}
+
+// "SETAPPROXTIME week seconds" for the current system clock (GPS time)
+std::string approxTimeCommandNow()
+{
+  // GPS time = UTC + leap seconds (18 since 2017). An approximate time is all
+  // the receiver needs, so this constant does not have to be updated often.
+  constexpr double GPS_EPOCH_UNIX = 315964800.0;  // 1980-01-06T00:00:00Z
+  constexpr double GPS_LEAP_SECONDS = 18.0;
+  constexpr double SECONDS_PER_WEEK = 604800.0;
+
+  const double gpsTime = mrpt::Clock::nowDouble() - GPS_EPOCH_UNIX + GPS_LEAP_SECONDS;
+  const auto week = static_cast<int>(gpsTime / SECONDS_PER_WEEK);
+  const double secondsInWeek = gpsTime - week * SECONDS_PER_WEEK;
+  return mrpt::format("SETAPPROXTIME %d %.0f", week, secondsInWeek);
+}
+
+bool sendCommand(NovatelNodeState& state, const std::string& command, rclcpp::Logger& logger)
+{
+  if (!state.gps_interface)
+  {
+    RCLCPP_ERROR(logger, "GPS interface not available for sending commands");
+    return false;
+  }
+  RCLCPP_INFO(logger, "Sending command: %s", command.c_str());
+  const std::string cmd = command + "\r\n";
+  return state.gps_interface->sendCustomCommand(cmd.c_str(), cmd.length());
+}
+
+// Sends the approximate time and position, once each, if the receiver lacks them
+void sendStartupAiding(
+    NovatelNodeState& state, const mrpt::obs::gnss::Message_NV_OEM6_BESTPOS& bestpos,
+    rclcpp::Logger& logger)
+{
+  std::lock_guard<std::mutex> lock(state.mutex);
+
+  if (state.approx_time_from_system_clock && !state.approx_time_sent &&
+      bestpos.fields.header.time_status < NV_TIME_STATUS_APPROXIMATE)
+  {
+    state.approx_time_sent = sendCommand(state, approxTimeCommandNow(), logger);
+  }
+
+  if (!state.approx_position.empty() && !state.approx_position_sent &&
+      bestpos.fields.position_type == mrpt::obs::gnss::nv_oem6_position_type::NONE)
+  {
+    state.approx_position_sent =
+        sendCommand(state, "SETAPPROXPOS " + state.approx_position, logger);
+  }
 }
 
 // Send SETINITAZIMUTH command to Novatel
@@ -823,6 +905,9 @@ int main(int argc, char** argv)
     node->declare_parameter("external_imu_azimuth_deg_for_yaw_zero", 0.0);
     node->declare_parameter("alignment_mode", "UNAIDED");
     node->declare_parameter("novatel_init_azimuth", "0.0 25.0");  // "azimuth_deg std_deg"
+    node->declare_parameter("approx_time_from_system_clock", false);
+    node->declare_parameter("approx_position", "");  // "lat_deg lon_deg height_m"
+    node->declare_parameter("ins_positions_before_gnss_fix", false);
 
     // Get parameters
     std::string external_imu_topic = node->get_parameter("external_imu_topic").as_string();
@@ -830,6 +915,29 @@ int main(int argc, char** argv)
     state.external_imu_max_age_sec = node->get_parameter("external_imu_max_age_sec").as_double();
     state.external_imu_azimuth_deg_for_yaw_zero =
         node->get_parameter("external_imu_azimuth_deg_for_yaw_zero").as_double();
+    state.approx_time_from_system_clock =
+        node->get_parameter("approx_time_from_system_clock").as_bool();
+    const std::string approx_pos_str = node->get_parameter("approx_position").as_string();
+    if (!approx_pos_str.empty())
+    {
+      // Parse and re-format the numbers, so no arbitrary text reaches the receiver
+      double lat = 0;
+      double lon = 0;
+      double height = 0;
+      char trailing = 0;
+      if (sscanf(approx_pos_str.c_str(), "%lf %lf %lf %c", &lat, &lon, &height, &trailing) == 3)
+      {
+        state.approx_position = mrpt::format("%.9f %.9f %.3f", lat, lon, height);
+      }
+      else
+      {
+        RCLCPP_ERROR(
+            logger, "Invalid 'approx_position' (expected 'lat_deg lon_deg height_m'): '%s'",
+            approx_pos_str.c_str());
+      }
+    }
+    state.ins_positions_before_gnss_fix =
+        node->get_parameter("ins_positions_before_gnss_fix").as_bool();
 
     // Parse manual azimuth parameter
     std::string az_str = node->get_parameter("novatel_init_azimuth").as_string();
@@ -1064,7 +1172,17 @@ int main(int argc, char** argv)
           state.position_type = bestpos.fields.position_type;
           state.diff_age = bestpos.fields.diff_age;
           state.base_station_id = fixedCharsToString(bestpos.fields.base_station_id, 4);
+
+          if (!state.had_gnss_solution &&
+              bestpos.fields.solution_stat ==
+                  mrpt::obs::gnss::nv_oem6_solution_status::SOL_COMPUTED &&
+              isGnssPositionType(bestpos.fields.position_type))
+          {
+            state.had_gnss_solution = true;
+            RCLCPP_INFO(logger, "First GNSS solution since startup");
+          }
         }
+        sendStartupAiding(state, bestpos, logger);
 
         if (bestpos.fields.solution_stat != last_sol_stat ||
             bestpos.fields.position_type != last_pos_type)
@@ -1107,6 +1225,19 @@ int main(int argc, char** argv)
           msg.position_covariance[0 * 3 + 0] = mrpt::square((*enu_sigmas)[0]);
           msg.position_covariance[1 * 3 + 1] = mrpt::square((*enu_sigmas)[1]);
           msg.position_covariance[2 * 3 + 2] = mrpt::square((*enu_sigmas)[2]);
+        }
+
+        bool publishAsNoFix = false;
+        {
+          std::lock_guard<std::mutex> lock(state.mutex);
+          publishAsNoFix = !state.had_gnss_solution && !state.ins_positions_before_gnss_fix;
+        }
+        if (publishAsNoFix && msg.status.status != sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX)
+        {
+          RCLCPP_INFO_THROTTLE(
+              logger, *node->get_clock(), 30000,
+              "No GNSS solution since startup: publishing receiver positions as NO_FIX");
+          msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
         }
 
         node->gps_publisher_->publish(msg);
