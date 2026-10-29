@@ -120,6 +120,29 @@ def generate_launch_description():
                         'Used if external IMU not available/fresh.'
         ),
 
+        # STARTUP AIDING (each sent once, only if the receiver lacks it):
+        # --------------------------------------------
+        DeclareLaunchArgument(
+            'approx_time_from_system_clock',
+            default_value='false',
+            description='If true, send SETAPPROXTIME from the system clock while the '
+                        'receiver does not know the time (faster first fix).'
+        ),
+        DeclareLaunchArgument(
+            'approx_position',
+            default_value='',
+            description='If not empty, "lat_deg lon_deg height_m" sent as SETAPPROXPOS while '
+                        'the receiver has no position (faster first fix). With SPAN, the INS '
+                        'also takes it as its initial position.'
+        ),
+        DeclareLaunchArgument(
+            'ins_positions_before_gnss_fix',
+            default_value='false',
+            description='If false, positions published before the first GNSS solution since '
+                        'startup (e.g. the INS propagating an approximate position) are '
+                        'marked NO_FIX.'
+        ),
+
         # EXTERNAL IMU FOR AZIMUTH INITIALIZATION:
         # --------------------------------------------
         DeclareLaunchArgument(
@@ -253,6 +276,13 @@ def generate_launch_description():
                 {'alignment_mode': LaunchConfiguration('alignment_mode')},
                 {'novatel_init_azimuth': LaunchConfiguration(
                     'novatel_init_azimuth')},
+
+                # Startup aiding:
+                {'approx_time_from_system_clock': LaunchConfiguration(
+                    'approx_time_from_system_clock')},
+                {'approx_position': LaunchConfiguration('approx_position')},
+                {'ins_positions_before_gnss_fix': LaunchConfiguration(
+                    'ins_positions_before_gnss_fix')},
 
                 # External IMU:
                 {'external_imu_topic': LaunchConfiguration(
