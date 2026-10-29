@@ -548,6 +548,9 @@ ros2 service call /gnss/mrpt_sensor_gnss_novatel/send_novatel_command \
 
 Supported models: `hfi-b6`, `hfi-a9`
 
+Publishes `<publish_topic>` (`sensor_msgs/Imu`) and, for models with a magnetometer (`hfi-a9`),
+the raw magnetic field in the sensor axes on `<publish_topic>/mag` (`sensor_msgs/MagneticField`).
+
 ```bash
 # INSTALL:
 sudo apt install ros-${ROS_DISTRO}-mrpt-sensor-imu-taobotics
