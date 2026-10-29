@@ -43,13 +43,13 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'sensor_frame_id',
             default_value='sensor',
-            description='The sensor frame_id name. Used to populate msg header and to publish to /tf too.'
+            description='The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.'
         ),
 
         DeclareLaunchArgument(
             'robot_frame_id',
             default_value='base_link',
-            description='The robot frame_id name. Used to publish the sensor pose to /tf.'
+            description='The robot frame_id name. Used to publish the sensor pose to /tf_static.'
         ),
 
         DeclareLaunchArgument(

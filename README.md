@@ -20,6 +20,9 @@ ROS nodes for various robotics sensors via mrpt-hwdrivers.
 
 All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS 2 topic QoS.
 
+The pose of each sensor (`robot_frame_id` to `sensor_frame_id`) is published to `/tf_static`.
+Launches that namespace the TF tree must remap `/tf_static` too, not only `/tf`.
+
 <!-- md_toc github  < README.md -->
 
 # Table of Contents
@@ -155,11 +158,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'dc1394_framerate':
@@ -259,7 +262,7 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'sensor_label':
@@ -367,11 +370,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'sensor_label':
@@ -579,11 +582,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'imu')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'serial_port':
