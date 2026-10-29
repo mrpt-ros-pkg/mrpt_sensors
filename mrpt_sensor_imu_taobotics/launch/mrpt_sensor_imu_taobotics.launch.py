@@ -102,6 +102,12 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
+            'node_name',
+            default_value='mrpt_sensor_imu_taobotics',
+            description='ROS node name (e.g. to run several IMUs at once)'
+        ),
+
+        DeclareLaunchArgument(
             "log_level",
             default_value=TextSubstitution(text=str("INFO")),
             description="Logging level"
@@ -111,7 +117,7 @@ def generate_launch_description():
         Node(
             package='mrpt_sensor_imu_taobotics',
             executable='mrpt_sensor_imu_taobotics_node',
-            name='mrpt_sensor_imu_taobotics',
+            name=LaunchConfiguration('node_name'),
             output='screen',
             arguments=['--ros-args', '--log-level',
                        LaunchConfiguration('log_level')],
