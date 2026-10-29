@@ -155,11 +155,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'dc1394_framerate':
@@ -259,7 +259,7 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'sensor_label':
@@ -367,11 +367,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'sensor')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'sensor_label':
@@ -579,11 +579,11 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: 'sensor')
 
     'sensor_frame_id':
-        The sensor frame_id name. Used to populate msg header and to publish to /tf too.
+        The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.
         (default: 'imu')
 
     'robot_frame_id':
-        The robot frame_id name. Used to publish the sensor pose to /tf.
+        The robot frame_id name. Used to publish the sensor pose to /tf_static.
         (default: 'base_link')
 
     'serial_port':
