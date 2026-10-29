@@ -92,6 +92,7 @@ std::string short_error_message(const std::string& what)
 
 GenericSensorNode::GenericSensorNode(const std::string& nodeName) : Node(nodeName)
 {
+  tf_bc_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
   tf_static_bc_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(*this);
   stamp_node_start_ = mrpt::Clock::nowDouble();
 }

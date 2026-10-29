@@ -44,6 +44,7 @@
 #include <mrpt/math/TPose3D.h>
 #include <mrpt/obs/obs_frwds.h>
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 //
 #include <functional>
@@ -126,7 +127,8 @@ class GenericSensorNode : public rclcpp::Node
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_publisher_;
   std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr> images_publisher_;
-  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_bc_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_bc_;  //!< For sensor-specific transforms
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_bc_;  //!< The sensor pose
 
   const auto sensor_frame_id() const { return sensor_frame_id_; }
   const auto publish_topic() const { return publish_topic_; }

@@ -20,6 +20,9 @@ ROS nodes for various robotics sensors via mrpt-hwdrivers.
 
 All packages follow [REP-2003](https://ros.org/reps/rep-2003.html) regarding ROS 2 topic QoS.
 
+The pose of each sensor (`robot_frame_id` to `sensor_frame_id`) is published to `/tf_static`.
+Launches that namespace the TF tree must remap `/tf_static` too, not only `/tf`.
+
 <!-- md_toc github  < README.md -->
 
 # Table of Contents
