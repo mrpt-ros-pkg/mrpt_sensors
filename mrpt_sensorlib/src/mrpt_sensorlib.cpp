@@ -516,6 +516,22 @@ void GenericSensorNode::process(const mrpt::obs::CObservationIMU& o)
   if (!valid) return;
 
   imu_publisher_->publish(msg);
+
+  if (!o.has(mrpt::obs::IMU_MAG_X) || !o.has(mrpt::obs::IMU_MAG_Y) || !o.has(mrpt::obs::IMU_MAG_Z))
+  {
+    return;
+  }
+  ensure_publisher_exists<sensor_msgs::msg::MagneticField>(mag_publisher_, "/mag");
+
+  // MRPT keeps the field in gauss, in the sensor axes; ROS expects tesla.
+  // The covariance stays zero: unknown.
+  constexpr double GAUSS_TO_TESLA = 1e-4;
+  auto magMsg = sensor_msgs::msg::MagneticField();
+  magMsg.header = header;
+  magMsg.magnetic_field.x = o.get(mrpt::obs::IMU_MAG_X) * GAUSS_TO_TESLA;
+  magMsg.magnetic_field.y = o.get(mrpt::obs::IMU_MAG_Y) * GAUSS_TO_TESLA;
+  magMsg.magnetic_field.z = o.get(mrpt::obs::IMU_MAG_Z) * GAUSS_TO_TESLA;
+  mag_publisher_->publish(magMsg);
 }
 
 void GenericSensorNode::diag_callback(diagnostic_updater::DiagnosticStatusWrapper& stat)
