@@ -104,6 +104,20 @@ std::string bayer_encoding(const std::string& pattern)
   return "bayer_" + pattern + "8";
 }
 
+/** Declares a numeric parameter that accepts both integer and double values
+ * (e.g. "low_rate_hz:=0" from a launch file is an integer). */
+double declare_number(rclcpp::Node& node, const std::string& name, double defaultValue)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.dynamic_typing = true;
+  const auto v = node.declare_parameter(name, rclcpp::ParameterValue(defaultValue), descriptor);
+  if (v.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+  {
+    return static_cast<double>(v.get<int64_t>());
+  }
+  return v.get<double>();
+}
+
 using ImagePub = rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr;
 
 /** Publishes the left and right images of each stereo frame. */
@@ -112,10 +126,10 @@ class StereoPublisher
  public:
   explicit StereoPublisher(mrpt_sensors::GenericSensorNode& node) : node_(node)
   {
-    low_rate_hz_ = node.declare_parameter("low_rate_hz", low_rate_hz_);
+    low_rate_hz_ = declare_number(node, "low_rate_hz", low_rate_hz_);
     publish_full_rate_ = node.declare_parameter("publish_full_rate", publish_full_rate_);
     raw_encoding_ = bayer_encoding(node.declare_parameter("bayer_pattern", std::string("gbrg")));
-    baseline_ = node.declare_parameter("stereo_baseline", baseline_);
+    baseline_ = declare_number(node, "stereo_baseline", baseline_);
   }
 
   /** Once the node is initialized (it knows the sensor frame). */
