@@ -19,9 +19,10 @@
 
   <depend>diagnostic_updater</depend>
 
-  <!-- <depend>rclcpp</depend> -->
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
   <depend>rclcpp_components</depend>
-  <!-- <depend>tf2</depend> -->
+  <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
 

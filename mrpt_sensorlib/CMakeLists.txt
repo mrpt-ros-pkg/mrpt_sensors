@@ -3,6 +3,8 @@ project(mrpt_sensorlib)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -79,7 +81,18 @@ target_link_libraries(${PROJECT_NAME}
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
-ament_export_dependencies(diagnostic_updater)
+# Dependencies of the public header and exported target:
+ament_export_dependencies(
+  rclcpp
+  mrpt_msgs
+  mrpt_libros_bridge
+  mrpt_hwdrivers
+  sensor_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  diagnostic_updater
+)
 
 install(
   TARGETS ${PROJECT_NAME}

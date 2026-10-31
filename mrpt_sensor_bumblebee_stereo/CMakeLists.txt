@@ -4,34 +4,26 @@ project(mrpt_sensor_bumblebee_stereo)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(mrpt_sensorlib REQUIRED)
-find_package(tf2 REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-
-find_package(mrpt_msgs REQUIRED)
-find_package(mrpt_libros_bridge REQUIRED)
+find_package(mrpt_sensorlib REQUIRED)
 find_package(mrpt_hwdrivers REQUIRED)
 
 ###########
 ## Build ##
 ###########
 
-## Declare a cpp executable
 add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 
 target_link_libraries(
   ${PROJECT_NAME}_node
   rclcpp::rclcpp
-  rclcpp_components::component
-  mrpt_sensorlib::mrpt_sensorlib
-  mrpt_libros_bridge::mrpt_libros_bridge
-  mrpt::mrpt_hwdrivers
-  mrpt_msgs::mrpt_msgs_library
-  tf2::tf2
+  ${sensor_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
   tf2_ros::tf2_ros
-  tf2_geometry_msgs::tf2_geometry_msgs
+  mrpt_sensorlib::mrpt_sensorlib
+  mrpt::mrpt_hwdrivers
 )
 
 #############

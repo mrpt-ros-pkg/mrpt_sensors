@@ -1,167 +1,80 @@
-# Importing necessary libraries
+# Bumblebee / Bumblebee2 FireWire stereo camera.
+#
+# Publishes, in the given namespace:
+#   left/image_raw, right/image_raw: every frame, only while subscribed.
+#   low_rate/left/image_raw, low_rate/right/image_raw: one frame every
+#     1/low_rate_hz seconds.
+# Images are the raw Bayer mosaics (bayer_<pattern>8, lossless) unless
+# bayer_decoding is true (rgb8). Frames: <sensor_frame_id> (camera body, at the
+# left camera) and the optical frames <sensor_frame_id>_left / _right.
+
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.actions import GroupAction
-from launch_ros.actions import PushRosNamespace
-from launch.conditions import IfCondition
-import os
+from launch.actions import DeclareLaunchArgument, GroupAction
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.actions import Node, PushRosNamespace
+
+# Launch argument name, default value, description. String values are quoted,
+# so ROS keeps them as strings.
+ARGS = [
+    ('process_rate', '"80"', 'Rate (Hz) of the main sensor loop: above the camera rate.'),
+    ('out_rawlog_prefix', '',
+     'If not empty, a .rawlog file will be created with all recorded data, apart of publishing '
+     'it as ROS messages.'),
+    ('publish_mrpt_obs_topic', '',
+     'If not empty, mrpt_msgs/GenericObservation messages will be published to this topic name '
+     'with the binary serialization of mrtp::obs::CObservation objects from the sensor.'),
+    ('sensor_frame_id', 'camera',
+     'Camera body frame (x forward, at the left camera). Images are in the optical frames '
+     '<sensor_frame_id>_left and _right.'),
+    ('robot_frame_id', 'base_link',
+     'The robot frame_id name. Used to publish the sensor pose to /tf_static.'),
+    ('sensor_label', 'stereo',
+     'The sensorLabel field of mrpt::obs::CObservation: a "name" for the sensor.'),
+    ('dc1394_framerate', '"15"', 'Camera frame rate (Hz): 1.875, 3.75, 7.5, 15, 30 or 60.'),
+    ('dc1394_camera_guid', '"0"',
+     '0: the first camera. A hexadecimal number (0x11223344): the GUID of the camera to open.'),
+    ('bayer_decoding', '"false"',
+     'false: publish the raw Bayer images (lossless, 1 byte/pixel); true: RGB images.'),
+    ('bayer_pattern', 'gbrg',
+     'Color filter of the raw images (rggb, bggr, gbrg or grbg). Bumblebee2: gbrg.'),
+    ('low_rate_hz', '1.0', 'Rate (Hz) of the low_rate/ images; 0 to disable them.'),
+    ('publish_full_rate', 'true', 'Whether to advertise the full rate images.'),
+    ('stereo_baseline', '0.12', 'Distance between the cameras (m), for the right optical frame.'),
+    ('camera_preview_decimation', '"0"',
+     'N<=0: No preview; N>0, display 1 out of N captured frames (needs a display).'),
+    ('sensor_pose_x', '"0.0"', 'Sensor pose coordinate on the vehicle frame (meters).'),
+    ('sensor_pose_y', '"0.0"', 'Sensor pose coordinate on the vehicle frame (meters).'),
+    ('sensor_pose_z', '"0.0"', 'Sensor pose coordinate on the vehicle frame (meters).'),
+    ('sensor_pose_yaw', '"0.0"', 'Sensor pose coordinate on the vehicle frame (degrees).'),
+    ('sensor_pose_pitch', '"0.0"', 'Sensor pose coordinate on the vehicle frame (degrees).'),
+    ('sensor_pose_roll', '"0.0"', 'Sensor pose coordinate on the vehicle frame (degrees).'),
+]
 
 
 def generate_launch_description():
-    namespace = 'bumblebee_stereo'
+    params = {name: LaunchConfiguration(name) for name, _, _ in ARGS}
+    # The diagnostics expect one observation per camera frame:
+    params['diag_expected_rate'] = PythonExpression(
+        ['float(', LaunchConfiguration('dc1394_framerate'), ')'])
 
-    ld = LaunchDescription([
-        # COMMON PARAMS TO ALL MRPT_SENSOR NODES:
-        # --------------------------------------------
-        # Declare an argument for the config file
-        DeclareLaunchArgument(
-            'process_rate',
-            default_value='"80"',
-            description='Rate (Hz) for the process() main sensor loop.'
-        ),
-
-        DeclareLaunchArgument(
-            'out_rawlog_prefix',
-            default_value='',
-            description='If not empty, a .rawlog file will be created with all recorded data, apart of publishing it as ROS messages.'
-        ),
-
-        DeclareLaunchArgument(
-            'publish_mrpt_obs_topic',
-            default_value='',
-            description='If not empty, mrpt_msgs/GenericObservation messages will be published to this topic name with the binary serialization of mrtp::obs::CObservation objects from the sensor.'
-        ),
-
-        DeclareLaunchArgument(
-            'publish_topic',
-            default_value='sensor',
-            description='If not empty, messages of type sensor_msg/Image will be published to this topic (plus suffix "_left"/"_right") for each sensor observation.'
-        ),
-
-        DeclareLaunchArgument(
-            'sensor_frame_id',
-            default_value='sensor',
-            description='The sensor frame_id name. Used to populate msg header and to publish to /tf_static too.'
-        ),
-
-        DeclareLaunchArgument(
-            'robot_frame_id',
-            default_value='base_link',
-            description='The robot frame_id name. Used to publish the sensor pose to /tf_static.'
-        ),
-        DeclareLaunchArgument(
-            'sensor_label',
-            default_value='sensor',
-            description='The sensorLabel field of mrpt::obs::CObservation: a "name" for the sensor.'
-        ),
-
-        # PARAMS FOR THIS NODE:
-        # --------------------------------------------
-
-        DeclareLaunchArgument(
-            'dc1394_framerate',
-            default_value='"15"',
-            description='eg: 7.5, 15, 30, 60, etc... For possibilities see mrpt::hwdrivers::TCaptureOptions_dc1394'
-        ),
-
-        DeclareLaunchArgument(
-            'dc1394_camera_guid',
-            default_value='"0"',
-            description='0 (or not present): the first camera. A hexadecimal number (0x11223344): The GUID of the camera to open'
-        ),
-
-        DeclareLaunchArgument(
-            'camera_preview_decimation',
-            default_value='"0"',
-            description='N<=0 (or not present): No preview; N>0, display 1 out of N captured frames.'
-        ),
-
-        DeclareLaunchArgument(
-            'sensor_pose_x',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame.'
-        ),
-        DeclareLaunchArgument(
-            'sensor_pose_y',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame.'
-        ),
-        DeclareLaunchArgument(
-            'sensor_pose_z',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame.'
-        ),
-        DeclareLaunchArgument(
-            'sensor_pose_yaw',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame (degrees).'
-        ),
-        DeclareLaunchArgument(
-            'sensor_pose_pitch',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame (degrees).'
-        ),
-        DeclareLaunchArgument(
-            'sensor_pose_roll',
-            default_value='"0.0"',
-            description='Sensor pose coordinate on the vehicle frame (degrees).'
-        ),
-
-        DeclareLaunchArgument(
-            "log_level",
-            default_value=TextSubstitution(text=str("INFO")),
-            description="Logging level"
-        ),
-
-        # Node to launch the mrpt_generic_sensor_node
-        Node(
-            package='mrpt_sensor_bumblebee_stereo',
-            executable='mrpt_sensor_bumblebee_stereo_node',
-            name='mrpt_sensor_bumblebee_stereo',
-            output='screen',
-            arguments=['--ros-args', '--log-level',
-                       LaunchConfiguration('log_level')],
-            parameters=[
-                # ------------------------------------------------
-                # common params:
-                # ------------------------------------------------
-                {'process_rate': LaunchConfiguration('process_rate')},
-                {'out_rawlog_prefix': LaunchConfiguration(
-                    'out_rawlog_prefix')},
-                {'publish_mrpt_obs_topic': LaunchConfiguration(
-                    'publish_mrpt_obs_topic')},
-                {'publish_topic': LaunchConfiguration('publish_topic')},
-                {'sensor_frame_id': LaunchConfiguration('sensor_frame_id')},
-                {'robot_frame_id': LaunchConfiguration('robot_frame_id')},
-                {'sensor_label': LaunchConfiguration('sensor_label')},
-
-                # ------------------------------------------------
-                # node params:
-                # ------------------------------------------------
-                {'dc1394_framerate': LaunchConfiguration('dc1394_framerate')},
-                {'dc1394_camera_guid': LaunchConfiguration(
-                    'dc1394_camera_guid')},
-                {'camera_preview_decimation': LaunchConfiguration(
-                    'camera_preview_decimation')},
-
-                {'sensor_pose_x': LaunchConfiguration('sensor_pose_x')},
-                {'sensor_pose_y': LaunchConfiguration('sensor_pose_y')},
-                {'sensor_pose_z': LaunchConfiguration('sensor_pose_z')},
-                {'sensor_pose_yaw': LaunchConfiguration('sensor_pose_yaw')},
-                {'sensor_pose_pitch': LaunchConfiguration(
-                    'sensor_pose_pitch')},
-                {'sensor_pose_roll': LaunchConfiguration('sensor_pose_roll')},
-            ]
-        )
-    ])
-
-    # Namespace to avoid clash launch argument names with the parent scope:
-    return LaunchDescription([GroupAction(
-        actions=[
-            PushRosNamespace(
-                # condition=IfCondition(use_namespace),
-                namespace=namespace),
-            ld
-        ])])
+    return LaunchDescription(
+        [DeclareLaunchArgument(name, default_value=value, description=desc)
+         for name, value, desc in ARGS] + [
+            DeclareLaunchArgument('namespace', default_value='bumblebee_stereo',
+                                  description='Namespace of the node and its topics.'),
+            DeclareLaunchArgument('node_name', default_value='mrpt_sensor_bumblebee_stereo',
+                                  description='Node name.'),
+            DeclareLaunchArgument('log_level', default_value='INFO',
+                                  description='Logging level'),
+            # The group keeps the namespace to this node:
+            GroupAction([
+                PushRosNamespace(LaunchConfiguration('namespace')),
+                Node(
+                    package='mrpt_sensor_bumblebee_stereo',
+                    executable='mrpt_sensor_bumblebee_stereo_node',
+                    name=LaunchConfiguration('node_name'),
+                    output='screen',
+                    arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+                    parameters=[params]),
+            ]),
+        ])
