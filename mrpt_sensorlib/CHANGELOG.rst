@@ -2,6 +2,14 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* IMU: also publish the magnetic field, if the sensor provides it, on <publish_topic>/mag (sensor_msgs/MagneticField).
+* Publish the sensor pose to /tf_static, once and again only if it changes, instead of periodically to /tf.
+* Bumblebee stereo support: raw Bayer images, low-rate topics, optical frames.
+* Export the dependencies of the public header.
+* Contributors: Jose Luis Blanco-Claraco
+
 0.4.1 (2026-10-27)
 ------------------
 * Merge pull request `#20 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/20>`_ from mrpt-ros-pkg/fix/shorter-sensor-error-logs

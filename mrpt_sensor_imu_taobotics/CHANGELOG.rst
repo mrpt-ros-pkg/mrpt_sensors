@@ -2,6 +2,12 @@
 Changelog for package mrpt_sensor_imu_taobotics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Launch: node_name argument, to run several IMUs at once.
+* Publish the sensor pose to /tf_static instead of periodically to /tf.
+* Contributors: Jose Luis Blanco-Claraco
+
 0.4.1 (2026-10-27)
 ------------------
 

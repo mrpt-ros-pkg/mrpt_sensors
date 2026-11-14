@@ -2,6 +2,12 @@
 Changelog for package mrpt_sensor_gnss_novatel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Optional startup aiding: SETAPPROXTIME from the system clock (approx_time_from_system_clock) and SETAPPROXPOS (approx_position).
+* INS positions before the first GNSS solution are published as NO_FIX (ins_positions_before_gnss_fix).
+* Contributors: Jose Luis Blanco-Claraco
+
 0.4.1 (2026-10-27)
 ------------------
 * Merge pull request `#22 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/22>`_ from mrpt-ros-pkg/feat/novatel-rangecmp
