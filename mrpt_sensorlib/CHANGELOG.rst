@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensorlib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2026-11-14)
+------------------
 * IMU: also publish the magnetic field, if the sensor provides it, on <publish_topic>/mag (sensor_msgs/MagneticField).
 * Publish the sensor pose to /tf_static, once and again only if it changes, instead of periodically to /tf.
 * Bumblebee stereo support: raw Bayer images, low-rate topics, optical frames.

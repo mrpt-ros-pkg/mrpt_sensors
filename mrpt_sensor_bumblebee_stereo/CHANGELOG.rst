@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_bumblebee_stereo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2026-11-14)
+------------------
 * Lossless raw Bayer images by default (bayer_decoding:=true publishes rgb8 instead).
 * Topics follow the ROS camera conventions (left/image_raw, right/image_raw), plus low-rate topics (low_rate_hz, default 1 Hz).
 * Both images of a pair share the capture stamp; optical frames published to /tf_static (stereo_baseline).

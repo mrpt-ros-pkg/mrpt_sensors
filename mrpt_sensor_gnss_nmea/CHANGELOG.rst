@@ -2,8 +2,8 @@
 Changelog for package mrpt_sensor_gnss_nmea
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2026-11-14)
+------------------
 * Publish the sensor pose to /tf_static instead of periodically to /tf.
 * Contributors: Jose Luis Blanco-Claraco
 
