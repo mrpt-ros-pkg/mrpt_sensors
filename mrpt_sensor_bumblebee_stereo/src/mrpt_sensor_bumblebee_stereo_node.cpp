@@ -51,6 +51,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstring>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <optional>
@@ -124,11 +125,11 @@ double declare_number(rclcpp::Node& node, const std::string& name, double defaul
 template <size_t N>
 std::array<double, N> read_array(const mrpt::containers::yaml& node, const std::string& key)
 {
-  const auto& seq = node[key].asSequence();
+  const auto entry = node[key];
+  const auto& seq = entry.asSequence();
   if (seq.size() != N)
   {
-    throw std::invalid_argument(
-        "calibration_file: '" + key + "' must have " + std::to_string(N) + " values");
+    throw std::invalid_argument("'" + key + "' must have " + std::to_string(N) + " values");
   }
   std::array<double, N> v{};
   for (size_t i = 0; i < N; i++)
@@ -138,15 +139,27 @@ std::array<double, N> read_array(const mrpt::containers::yaml& node, const std::
   return v;
 }
 
-/** camera_info of one camera, from a calibration_file entry with the fields of
- * sensor_msgs/CameraInfo: image_width, image_height, distortion_model, k, d, r, p. */
+/** camera_info of one camera, from a calibration_file entry: image_width,
+ * image_height (as in camera_calibration_parsers files), distortion_model and
+ * the sensor_msgs/CameraInfo arrays k, d, r, p. */
 sensor_msgs::msg::CameraInfo read_camera_info(const mrpt::containers::yaml& node)
 {
   sensor_msgs::msg::CameraInfo ci;
-  ci.width = node["image_width"].as<uint32_t>();
-  ci.height = node["image_height"].as<uint32_t>();
+  const auto width = node["image_width"].as<int64_t>();
+  const auto height = node["image_height"].as<int64_t>();
+  if (width <= 0 || height <= 0)
+  {
+    throw std::invalid_argument("image_width and image_height must be positive");
+  }
+  ci.width = static_cast<uint32_t>(width);
+  ci.height = static_cast<uint32_t>(height);
   ci.distortion_model = node["distortion_model"].as<std::string>();
-  for (const auto& v : node["d"].asSequence())
+  if (ci.distortion_model.empty())
+  {
+    throw std::invalid_argument("distortion_model is empty");
+  }
+  const auto d = node["d"];
+  for (const auto& v : d.asSequence())
   {
     ci.d.push_back(v.as<double>());
   }
@@ -303,23 +316,44 @@ class StereoPublisher
    * which then replaces the nominal stereo_baseline. */
   void load_calibration(const std::string& file)
   {
-    const auto doc = mrpt::containers::yaml::FromFile(file);
-    const auto& ci = doc["camera_info"];
-    camera_info_ = {read_camera_info(ci["left"]), read_camera_info(ci["right"])};
-    if (doc.has("right_camera"))
+    std::string where = "camera_info";
+    try
     {
-      const auto& rc = doc["right_camera"];
-      const auto t = read_array<3>(rc, "xyz_m");
-      const auto q = read_array<4>(rc, "quat_xyzw");
-      geometry_msgs::msg::Transform tf;
-      tf.translation.x = t[0];
-      tf.translation.y = t[1];
-      tf.translation.z = t[2];
-      tf.rotation.x = q[0];
-      tf.rotation.y = q[1];
-      tf.rotation.z = q[2];
-      tf.rotation.w = q[3];
-      right_optical_ = tf;
+      const auto doc = mrpt::containers::yaml::FromFile(file);
+      const auto ci = doc["camera_info"];
+      std::array<sensor_msgs::msg::CameraInfo, 2> infos;
+      for (size_t i = 0; i < 2; i++)
+      {
+        const std::string side = (i == 0) ? "left" : "right";
+        where = "camera_info/" + side;
+        infos[i] = read_camera_info(ci[side]);
+      }
+      camera_info_ = infos;
+      if (doc.has("right_camera"))
+      {
+        where = "right_camera";
+        const auto rc = doc["right_camera"];
+        const auto t = read_array<3>(rc, "xyz_m");
+        const auto q = read_array<4>(rc, "quat_xyzw");
+        const double norm = std::sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+        if (!(norm > 1e-6))
+        {
+          throw std::invalid_argument("quat_xyzw has zero norm");
+        }
+        geometry_msgs::msg::Transform tf;
+        tf.translation.x = t[0];
+        tf.translation.y = t[1];
+        tf.translation.z = t[2];
+        tf.rotation.x = q[0] / norm;
+        tf.rotation.y = q[1] / norm;
+        tf.rotation.z = q[2] / norm;
+        tf.rotation.w = q[3] / norm;
+        right_optical_ = tf;
+      }
+    }
+    catch (const std::exception& e)
+    {
+      throw std::runtime_error("calibration_file '" + file + "', " + where + ": " + e.what());
     }
     RCLCPP_INFO_STREAM(node_.get_logger(), "Stereo calibration loaded from: " << file);
   }

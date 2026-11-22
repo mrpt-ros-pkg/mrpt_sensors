@@ -150,11 +150,12 @@ time the frame was captured. TF: `<robot_frame_id>` -> `<sensor_frame_id>`
 (optical frames, nominal baseline).
 
 With `calibration_file` (YAML), each image topic also gets its `camera_info`
-(same header), and the right optical frame takes the calibrated pose:
+(same header, published with each image, so only while the image topic has
+subscribers), and the right optical frame takes the calibrated pose, if given:
 
 ```yaml
 camera_info:
-  left:   # sensor_msgs/CameraInfo fields
+  left:   # image size as in camera_calibration_parsers; k, d, r, p as in sensor_msgs/CameraInfo
     image_width: 1024
     image_height: 768
     distortion_model: plumb_bob
@@ -228,7 +229,7 @@ Arguments (pass arguments as '<name>:=<value>'):
         (default: '0.12')
 
     'calibration_file':
-        Optional YAML with both camera_info and the right optical frame pose: publishes camera_info next to the images (see the README).
+        Optional YAML with the camera_info of both cameras (and, optionally, the right optical frame pose): publishes camera_info next to the images (see the README).
         (default: '')
 
     'camera_preview_decimation':

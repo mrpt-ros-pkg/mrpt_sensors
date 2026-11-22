@@ -42,8 +42,8 @@ ARGS = [
     ('publish_full_rate', 'true', 'Whether to advertise the full rate images.'),
     ('stereo_baseline', '0.12', 'Distance between the cameras (m), for the right optical frame.'),
     ('calibration_file', '',
-     'Optional YAML with both camera_info and the right optical frame pose: publishes '
-     'camera_info next to the images (see the README).'),
+     'Optional YAML with the camera_info of both cameras (and, optionally, the right '
+     'optical frame pose): publishes camera_info next to the images (see the README).'),
     ('camera_preview_decimation', '"0"',
      'N<=0: No preview; N>0, display 1 out of N captured frames (needs a display).'),
     ('sensor_pose_x', '"0.0"', 'Sensor pose coordinate on the vehicle frame (meters).'),
