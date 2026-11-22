@@ -41,19 +41,23 @@
 //   left/image_raw, right/image_raw: every frame, only while subscribed.
 //   low_rate/left/image_raw, low_rate/right/image_raw: one frame every
 //     1/low_rate_hz seconds (e.g. for previews or long recordings).
+//   .../camera_info next to each image topic, if calibration_file is given.
 // Images are the raw Bayer mosaics sent by the camera (bayer_xxxx8, lossless
 // and 3 times smaller than RGB) unless bayer_decoding is true (rgb8).
 // Both images of a pair share their stamp: the time the frame was captured.
 
+#include <mrpt/containers/yaml.h>
 #include <mrpt/obs/CObservationStereoImages.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstring>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/image_encodings.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <stdexcept>
 #include <string>
@@ -118,7 +122,55 @@ double declare_number(rclcpp::Node& node, const std::string& name, double defaul
   return v.get<double>();
 }
 
+template <size_t N>
+std::array<double, N> read_array(const mrpt::containers::yaml& node, const std::string& key)
+{
+  const auto entry = node[key];
+  const auto& seq = entry.asSequence();
+  if (seq.size() != N)
+  {
+    throw std::invalid_argument("'" + key + "' must have " + std::to_string(N) + " values");
+  }
+  std::array<double, N> v{};
+  for (size_t i = 0; i < N; i++)
+  {
+    v[i] = seq[i].as<double>();
+  }
+  return v;
+}
+
+/** camera_info of one camera, from a calibration_file entry: image_width,
+ * image_height (as in camera_calibration_parsers files), distortion_model and
+ * the sensor_msgs/CameraInfo arrays k, d, r, p. */
+sensor_msgs::msg::CameraInfo read_camera_info(const mrpt::containers::yaml& node)
+{
+  sensor_msgs::msg::CameraInfo ci;
+  const auto width = node["image_width"].as<int64_t>();
+  const auto height = node["image_height"].as<int64_t>();
+  if (width <= 0 || height <= 0)
+  {
+    throw std::invalid_argument("image_width and image_height must be positive");
+  }
+  ci.width = static_cast<uint32_t>(width);
+  ci.height = static_cast<uint32_t>(height);
+  ci.distortion_model = node["distortion_model"].as<std::string>();
+  if (ci.distortion_model.empty())
+  {
+    throw std::invalid_argument("distortion_model is empty");
+  }
+  const auto d = node["d"];
+  for (const auto& v : d.asSequence())
+  {
+    ci.d.push_back(v.as<double>());
+  }
+  ci.k = read_array<9>(node, "k");
+  ci.r = read_array<9>(node, "r");
+  ci.p = read_array<12>(node, "p");
+  return ci;
+}
+
 using ImagePub = rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr;
+using InfoPub = rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr;
 
 /** Publishes the left and right images of each stereo frame. */
 class StereoPublisher
@@ -130,6 +182,11 @@ class StereoPublisher
     publish_full_rate_ = node.declare_parameter("publish_full_rate", publish_full_rate_);
     raw_encoding_ = bayer_encoding(node.declare_parameter("bayer_pattern", std::string("gbrg")));
     baseline_ = declare_number(node, "stereo_baseline", baseline_);
+    const auto calibFile = node.declare_parameter("calibration_file", std::string());
+    if (!calibFile.empty())
+    {
+      load_calibration(calibFile);
+    }
   }
 
   /** Once the node is initialized (it knows the sensor frame). */
@@ -142,11 +199,25 @@ class StereoPublisher
     {
       full_[0] = node_.create_publisher<sensor_msgs::msg::Image>("left/image_raw", qos);
       full_[1] = node_.create_publisher<sensor_msgs::msg::Image>("right/image_raw", qos);
+      if (camera_info_)
+      {
+        full_info_[0] =
+            node_.create_publisher<sensor_msgs::msg::CameraInfo>("left/camera_info", qos);
+        full_info_[1] =
+            node_.create_publisher<sensor_msgs::msg::CameraInfo>("right/camera_info", qos);
+      }
     }
     if (low_rate_hz_ > 0)
     {
       low_[0] = node_.create_publisher<sensor_msgs::msg::Image>("low_rate/left/image_raw", qos);
       low_[1] = node_.create_publisher<sensor_msgs::msg::Image>("low_rate/right/image_raw", qos);
+      if (camera_info_)
+      {
+        low_info_[0] =
+            node_.create_publisher<sensor_msgs::msg::CameraInfo>("low_rate/left/camera_info", qos);
+        low_info_[1] =
+            node_.create_publisher<sensor_msgs::msg::CameraInfo>("low_rate/right/camera_info", qos);
+      }
     }
     publish_optical_frames();
   }
@@ -187,13 +258,27 @@ class StereoPublisher
       auto header = node_.create_header(*o);
       header.frame_id = optical_frame(i);
       const auto msg = to_ros(*images[i], header);
+      std::optional<sensor_msgs::msg::CameraInfo> info;
+      if (camera_info_)
+      {
+        info = (*camera_info_)[i];
+        info->header = header;
+      }
       if (full)
       {
         full_[i]->publish(msg);
+        if (info)
+        {
+          full_info_[i]->publish(*info);
+        }
       }
       if (low)
       {
         low_[i]->publish(msg);
+        if (info)
+        {
+          low_info_[i]->publish(*info);
+        }
       }
     }
   }
@@ -207,6 +292,12 @@ class StereoPublisher
   double frame_rate_ = 15;  // [Hz]
   std::array<ImagePub, 2> full_;
   std::array<ImagePub, 2> low_;
+  std::array<InfoPub, 2> full_info_;
+  std::array<InfoPub, 2> low_info_;
+  // From calibration_file: camera_info (left, right) and the right optical
+  // frame pose in the camera body frame.
+  std::optional<std::array<sensor_msgs::msg::CameraInfo, 2>> camera_info_;
+  std::optional<geometry_msgs::msg::Transform> right_optical_;
   std::optional<double> last_low_rate_stamp_;
 
   static bool subscribed(const ImagePub& pub)
@@ -219,10 +310,58 @@ class StereoPublisher
     return node_.sensor_frame_id() + (i == 0 ? "_left" : "_right");
   }
 
+  /** calibration_file (YAML): camera_info: {left: {...}, right: {...}} (see
+   * read_camera_info()) and, optionally, right_camera: {xyz_m: [x, y, z],
+   * quat_xyzw: [x, y, z, w]}: the right optical frame in the camera body frame,
+   * which then replaces the nominal stereo_baseline. */
+  void load_calibration(const std::string& file)
+  {
+    std::string where = "camera_info";
+    try
+    {
+      const auto doc = mrpt::containers::yaml::FromFile(file);
+      const auto ci = doc["camera_info"];
+      std::array<sensor_msgs::msg::CameraInfo, 2> infos;
+      for (size_t i = 0; i < 2; i++)
+      {
+        const std::string side = (i == 0) ? "left" : "right";
+        where = "camera_info/" + side;
+        infos[i] = read_camera_info(ci[side]);
+      }
+      camera_info_ = infos;
+      if (doc.has("right_camera"))
+      {
+        where = "right_camera";
+        const auto rc = doc["right_camera"];
+        const auto t = read_array<3>(rc, "xyz_m");
+        const auto q = read_array<4>(rc, "quat_xyzw");
+        const double norm = std::sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+        if (!(norm > 1e-6))
+        {
+          throw std::invalid_argument("quat_xyzw has zero norm");
+        }
+        geometry_msgs::msg::Transform tf;
+        tf.translation.x = t[0];
+        tf.translation.y = t[1];
+        tf.translation.z = t[2];
+        tf.rotation.x = q[0] / norm;
+        tf.rotation.y = q[1] / norm;
+        tf.rotation.z = q[2] / norm;
+        tf.rotation.w = q[3] / norm;
+        right_optical_ = tf;
+      }
+    }
+    catch (const std::exception& e)
+    {
+      throw std::runtime_error("calibration_file '" + file + "', " + where + ": " + e.what());
+    }
+    RCLCPP_INFO_STREAM(node_.get_logger(), "Stereo calibration loaded from: " << file);
+  }
+
   /** <sensor_frame_id> is the camera body (x forward, y left, z up) at the
    * left camera; <sensor_frame_id>_left/_right are the optical frames of each
-   * camera (z forward, x right, y down). The calibrated baseline may differ a
-   * little from the nominal one. */
+   * camera (z forward, x right, y down). Without a calibrated right camera
+   * pose, the right one is at the nominal baseline. */
   void publish_optical_frames()
   {
     for (size_t i = 0; i < 2; i++)
@@ -231,11 +370,18 @@ class StereoPublisher
       tf.header.stamp = node_.get_clock()->now();
       tf.header.frame_id = node_.sensor_frame_id();
       tf.child_frame_id = optical_frame(i);
-      tf.transform.translation.y = (i == 0) ? 0.0 : -baseline_;
-      tf.transform.rotation.x = -0.5;
-      tf.transform.rotation.y = 0.5;
-      tf.transform.rotation.z = -0.5;
-      tf.transform.rotation.w = 0.5;
+      if (i == 1 && right_optical_)
+      {
+        tf.transform = *right_optical_;
+      }
+      else
+      {
+        tf.transform.translation.y = (i == 0) ? 0.0 : -baseline_;
+        tf.transform.rotation.x = -0.5;
+        tf.transform.rotation.y = 0.5;
+        tf.transform.rotation.z = -0.5;
+        tf.transform.rotation.w = 0.5;
+      }
       node_.tf_static_bc_->sendTransform(tf);
     }
   }
