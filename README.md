@@ -149,6 +149,25 @@ time the frame was captured. TF: `<robot_frame_id>` -> `<sensor_frame_id>`
 (camera body, at the left camera) -> `<sensor_frame_id>_left` and `_right`
 (optical frames, nominal baseline).
 
+With `calibration_file` (YAML), each image topic also gets its `camera_info`
+(same header), and the right optical frame takes the calibrated pose:
+
+```yaml
+camera_info:
+  left:   # sensor_msgs/CameraInfo fields
+    image_width: 1024
+    image_height: 768
+    distortion_model: plumb_bob
+    k: [fx, 0, cx, 0, fy, cy, 0, 0, 1]
+    d: [k1, k2, p1, p2, k3]
+    r: [...]   # 9 values: stereo rectification rotation
+    p: [...]   # 12 values: projection (right camera: Tx = -fx * baseline)
+  right: {...}
+right_camera:  # optional: right optical frame in the camera body frame
+  xyz_m: [x, y, z]
+  quat_xyzw: [x, y, z, w]
+```
+
 <details>
   <summary>Launch arguments</summary>
 
@@ -207,6 +226,10 @@ Arguments (pass arguments as '<name>:=<value>'):
     'stereo_baseline':
         Distance between the cameras (m), for the right optical frame.
         (default: '0.12')
+
+    'calibration_file':
+        Optional YAML with both camera_info and the right optical frame pose: publishes camera_info next to the images (see the README).
+        (default: '')
 
     'camera_preview_decimation':
         N<=0: No preview; N>0, display 1 out of N captured frames (needs a display).
